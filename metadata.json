@@ -1,0 +1,6 @@
+{
+  "name": "CalendarProMax",
+  "description": "A daily work log, earnings tracker, and calendar application for freelancers to manage clients, tasks, and reports.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
