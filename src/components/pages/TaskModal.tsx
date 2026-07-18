@@ -11,7 +11,7 @@ interface TaskModalProps {
 }
 
 export const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onClose, taskToEdit, defaultDate }) => {
-  const { clients, createTask, updateTask, deleteTask, createClient, currentUser, fetchLatestExchangeRate } = useApp();
+  const { clients, createTask, updateTask, deleteTask, createClient, currentUser, fetchLatestExchangeRate, liveRate } = useApp();
 
   // Form Fields State
   const [title, setTitle] = useState('');
@@ -72,7 +72,7 @@ export const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onClose, taskToEdi
       setRatePerImage('1.5');
       setUsdRate('0');
       
-      setExchangeRate(currentUser?.defaultExchangeRate?.toString() || '58.50');
+      setExchangeRate(liveRate?.toString() || currentUser?.defaultExchangeRate?.toString() || '58.50');
       setStatus('Completed');
       setPriority('Medium');
       setProjectLink('');
@@ -394,8 +394,12 @@ export const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onClose, taskToEdi
                       <button
                         type="button"
                         onClick={async () => {
-                          const rate = await fetchLatestExchangeRate();
-                          if (rate) setExchangeRate(rate.toString());
+                          if (liveRate) {
+                            setExchangeRate(liveRate.toString());
+                          } else {
+                            const rate = await fetchLatestExchangeRate();
+                            if (rate) setExchangeRate(rate.toString());
+                          }
                         }}
                         className="text-[10px] font-bold text-emerald-500 hover:underline cursor-pointer"
                       >
@@ -438,8 +442,12 @@ export const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onClose, taskToEdi
                       <button
                         type="button"
                         onClick={async () => {
-                          const rate = await fetchLatestExchangeRate();
-                          if (rate) setExchangeRate(rate.toString());
+                          if (liveRate) {
+                            setExchangeRate(liveRate.toString());
+                          } else {
+                            const rate = await fetchLatestExchangeRate();
+                            if (rate) setExchangeRate(rate.toString());
+                          }
                         }}
                         className="text-[10px] font-bold text-emerald-500 hover:underline cursor-pointer"
                       >

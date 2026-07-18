@@ -57,6 +57,7 @@ interface AppContextType {
   removeToast: (id: string) => void;
 
   // API Exchange Rate Integration
+  liveRate: number | null;
   fetchingRate: boolean;
   fetchLatestExchangeRate: () => Promise<number | null>;
 
@@ -144,6 +145,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   });
   const [toasts, setToasts] = useState<Array<{ id: string; message: string; type: 'success' | 'error' | 'info' }>>([]);
   const [fetchingRate, setFetchingRate] = useState<boolean>(false);
+  const [liveRate, setLiveRate] = useState<number | null>(null);
 
   // Load basic users list and dark mode first
   useEffect(() => {
@@ -195,6 +197,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     };
 
     loadUsers();
+  }, []);
+
+  // Fetch exchange rate on app startup
+  useEffect(() => {
+    fetchLatestExchangeRate();
   }, []);
 
   // Load tasks and clients for the current user whenever currentUser changes
@@ -606,8 +613,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       const data = await response.json();
       const rate = data.rates?.PHP;
       if (rate) {
+        const rateNum = Number(rate.toFixed(2));
+        setLiveRate(rateNum);
         setFetchingRate(false);
-        return Number(rate.toFixed(2));
+        return rateNum;
       }
       throw new Error('PHP rate not found');
     } catch (e) {
@@ -736,6 +745,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         toasts,
         addToast,
         removeToast,
+        liveRate,
         fetchingRate,
         fetchLatestExchangeRate,
         exportData,

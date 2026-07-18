@@ -30,7 +30,17 @@ interface LayoutProps {
 }
 
 export const Layout: React.FC<LayoutProps> = ({ children, onQuickAdd }) => {
-  const { currentUser, activeTab, setActiveTab, darkMode, setDarkMode, users } = useApp();
+  const { 
+    currentUser, 
+    activeTab, 
+    setActiveTab, 
+    darkMode, 
+    setDarkMode, 
+    users,
+    liveRate,
+    fetchingRate: fetchingLiveRate,
+    fetchLatestExchangeRate: fetchLiveRate
+  } = useApp();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   
@@ -38,34 +48,6 @@ export const Layout: React.FC<LayoutProps> = ({ children, onQuickAdd }) => {
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [logoutPassword, setLogoutPassword] = useState('');
   const [logoutError, setLogoutError] = useState('');
-
-  // Live Exchange Rate State and fetcher
-  const [liveRate, setLiveRate] = useState<number | null>(null);
-  const [fetchingLiveRate, setFetchingLiveRate] = useState(false);
-
-  const fetchLiveRate = async () => {
-    setFetchingLiveRate(true);
-    try {
-      const response = await fetch('https://open.er-api.com/v6/latest/USD');
-      if (response.ok) {
-        const data = await response.json();
-        const rate = data.rates?.PHP;
-        if (rate) {
-          setLiveRate(Number(rate.toFixed(2)));
-        }
-      }
-    } catch (err) {
-      console.error('Failed to fetch live rate in header', err);
-    } finally {
-      setFetchingLiveRate(false);
-    }
-  };
-
-  useEffect(() => {
-    if (currentUser) {
-      fetchLiveRate();
-    }
-  }, [currentUser]);
 
   // Real-time workspace notifications from other users
   const [notifications, setNotifications] = useState<Array<{ id: string; text: string; time: string }>>([]);
