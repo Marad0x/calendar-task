@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useApp } from '../../context/AppContext';
-import { Task } from '../../types';
+import { Task, getLocalDateString } from '../../types';
 import { 
   Search, 
   ArrowUpDown, 
@@ -120,7 +120,7 @@ export const TaskLogs: React.FC<TaskLogsProps> = ({ onEditTask }) => {
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.setAttribute('href', url);
-    link.setAttribute('download', `CalendarProMax_Task_Log_${new Date().toISOString().split('T')[0]}.csv`);
+    link.setAttribute('download', `CalendarProMax_Task_Log_${getLocalDateString()}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);

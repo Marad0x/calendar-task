@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../../context/AppContext';
+import { getLocalDateString } from '../../types';
 import { 
   Download, 
   Upload, 
@@ -128,7 +129,7 @@ export const Settings: React.FC = () => {
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.setAttribute('href', url);
-    link.setAttribute('download', `${currentUser?.name.replace(/\s+/g, '_')}_Backup_${new Date().toISOString().split('T')[0]}.json`);
+    link.setAttribute('download', `${currentUser?.name.replace(/\s+/g, '_')}_Backup_${getLocalDateString()}.json`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);

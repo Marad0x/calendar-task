@@ -17,7 +17,7 @@ import {
   ChevronRight,
   X
 } from 'lucide-react';
-import { Task, Client } from '../../types';
+import { Task, Client, getLocalDateString } from '../../types';
 
 interface DashboardProps {
   onQuickAdd: (dateString?: string) => void;
@@ -52,12 +52,12 @@ export const Dashboard: React.FC<DashboardProps> = ({ onQuickAdd, onViewTask }) 
     }
 
     const now = new Date();
-    const todayStr = now.toISOString().split('T')[0];
+    const todayStr = getLocalDateString(now);
     
     // Start of week (Sunday)
     const sunday = new Date(now);
     sunday.setDate(now.getDate() - now.getDay());
-    const weekStartStr = sunday.toISOString().split('T')[0];
+    const weekStartStr = getLocalDateString(sunday);
 
     // Start of month
     const monthStartStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`;
@@ -148,7 +148,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onQuickAdd, onViewTask }) 
         const sunday = new Date(now);
         sunday.setDate(now.getDate() - now.getDay());
         sunday.setHours(0, 0, 0, 0);
-        const sundayStr = sunday.toISOString().split('T')[0];
+        const sundayStr = getLocalDateString(sunday);
         return taskList.filter(t => t.date >= sundayStr);
       }
       if (period === 'this-month') {
@@ -196,12 +196,12 @@ export const Dashboard: React.FC<DashboardProps> = ({ onQuickAdd, onViewTask }) 
   // Statistics calculations
   const stats = useMemo(() => {
     const now = new Date();
-    const todayStr = now.toISOString().split('T')[0];
+    const todayStr = getLocalDateString(now);
     
     // Start of week (Sunday)
     const sunday = new Date(now);
     sunday.setDate(now.getDate() - now.getDay());
-    const weekStartStr = sunday.toISOString().split('T')[0];
+    const weekStartStr = getLocalDateString(sunday);
 
     // Start of month
     const monthStartStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`;
@@ -230,15 +230,15 @@ export const Dashboard: React.FC<DashboardProps> = ({ onQuickAdd, onViewTask }) 
     let streak = 0;
     if (uniqueDates.length > 0) {
       let checkDate = new Date();
-      let hasWorkToday = uniqueDates.includes(checkDate.toISOString().split('T')[0]);
+      let hasWorkToday = uniqueDates.includes(getLocalDateString(checkDate));
       let yesterday = new Date();
       yesterday.setDate(checkDate.getDate() - 1);
-      let hasWorkYesterday = uniqueDates.includes(yesterday.toISOString().split('T')[0]);
+      let hasWorkYesterday = uniqueDates.includes(getLocalDateString(yesterday));
 
       if (hasWorkToday || hasWorkYesterday) {
         let currentDate = hasWorkToday ? checkDate : yesterday;
         while (true) {
-          const dateStr = currentDate.toISOString().split('T')[0];
+          const dateStr = getLocalDateString(currentDate);
           if (uniqueDates.includes(dateStr)) {
             streak++;
             currentDate.setDate(currentDate.getDate() - 1);
@@ -304,7 +304,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onQuickAdd, onViewTask }) 
     // Preceding month trailing days
     for (let i = firstDayIndex - 1; i >= 0; i--) {
       const d = new Date(year, month - 1, prevMonthTotalDays - i);
-      const dateStr = d.toISOString().split('T')[0];
+      const dateStr = getLocalDateString(d);
       days.push({
         date: d,
         dateStr,
@@ -316,7 +316,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onQuickAdd, onViewTask }) 
     // Current month days
     for (let i = 1; i <= totalDays; i++) {
       const d = new Date(year, month, i);
-      const dateStr = d.toISOString().split('T')[0];
+      const dateStr = getLocalDateString(d);
       days.push({
         date: d,
         dateStr,
@@ -329,7 +329,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onQuickAdd, onViewTask }) 
     const remainingCells = 42 - days.length;
     for (let i = 1; i <= remainingCells; i++) {
       const d = new Date(year, month + 1, i);
-      const dateStr = d.toISOString().split('T')[0];
+      const dateStr = getLocalDateString(d);
       days.push({
         date: d,
         dateStr,

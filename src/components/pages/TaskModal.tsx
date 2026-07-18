@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../../context/AppContext';
-import { Task, Client, TaskStatus, TaskPriority } from '../../types';
+import { Task, Client, TaskStatus, TaskPriority, getLocalDateString } from '../../types';
 import { X, Plus, Image as ImageIcon, Link, Trash2, Calendar, Clock, DollarSign } from 'lucide-react';
 
 interface TaskModalProps {
@@ -66,7 +66,7 @@ export const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onClose, taskToEdi
       // Create Mode
       setTitle('');
       setDescription('');
-      setDate(defaultDate || new Date().toISOString().split('T')[0]);
+      setDate(defaultDate || getLocalDateString());
       setClientId('living-core');
       setImageCount('0');
       setRatePerImage('1.5');

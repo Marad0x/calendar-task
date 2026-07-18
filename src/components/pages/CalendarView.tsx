@@ -17,7 +17,7 @@ import {
   AlertCircle,
   XCircle
 } from 'lucide-react';
-import { Task, Client, TaskStatus } from '../../types';
+import { Task, Client, TaskStatus, getLocalDateString } from '../../types';
 
 interface CalendarViewProps {
   onQuickAdd: (dateString: string) => void;
@@ -57,7 +57,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ onQuickAdd, onEditTa
 
       if (e.key.toLowerCase() === 'n') {
         e.preventDefault();
-        onQuickAdd(new Date().toISOString().split('T')[0]);
+        onQuickAdd(getLocalDateString());
       } else if (e.key.toLowerCase() === 'f') {
         e.preventDefault();
         const searchInput = document.getElementById('calendar-search-input');
@@ -200,7 +200,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ onQuickAdd, onEditTa
     // Preceding month days
     for (let i = firstDayIndex - 1; i >= 0; i--) {
       const date = new Date(year, month - 1, prevMonthTotalDays - i);
-      const dateStr = date.toISOString().split('T')[0];
+      const dateStr = getLocalDateString(date);
       days.push({
         date,
         dateStr,
@@ -212,7 +212,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ onQuickAdd, onEditTa
     // Current month days
     for (let i = 1; i <= totalDays; i++) {
       const date = new Date(year, month, i);
-      const dateStr = date.toISOString().split('T')[0];
+      const dateStr = getLocalDateString(date);
       days.push({
         date,
         dateStr,
@@ -225,7 +225,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ onQuickAdd, onEditTa
     const remainingCells = 42 - days.length;
     for (let i = 1; i <= remainingCells; i++) {
       const date = new Date(year, month + 1, i);
-      const dateStr = date.toISOString().split('T')[0];
+      const dateStr = getLocalDateString(date);
       days.push({
         date,
         dateStr,
@@ -246,7 +246,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ onQuickAdd, onEditTa
     
     for (let i = 0; i < 7; i++) {
       const d = new Date(tempDate);
-      const dateStr = d.toISOString().split('T')[0];
+      const dateStr = getLocalDateString(d);
       days.push({
         date: d,
         dateStr,
@@ -260,7 +260,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ onQuickAdd, onEditTa
 
   // DAY VIEW CALCULATION
   const dayStr = useMemo(() => {
-    return currentDate.toISOString().split('T')[0];
+    return getLocalDateString(currentDate);
   }, [currentDate]);
 
   return (
@@ -301,7 +301,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ onQuickAdd, onEditTa
           <input
             id="calendar-jump-date"
             type="date"
-            value={currentDate.toISOString().split('T')[0]}
+            value={getLocalDateString(currentDate)}
             onChange={(e) => {
               if (e.target.value) setCurrentDate(new Date(e.target.value));
             }}
@@ -398,7 +398,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ onQuickAdd, onEditTa
               const dayUsd = activeDayTasks.reduce((sum, t) => sum + t.usdRate, 0);
               const dayPhp = activeDayTasks.reduce((sum, t) => sum + t.phpAmount, 0);
 
-              const isToday = new Date().toISOString().split('T')[0] === day.dateStr;
+              const isToday = getLocalDateString() === day.dateStr;
 
               return (
                 <div
@@ -525,7 +525,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ onQuickAdd, onEditTa
           <div className="grid grid-cols-7 divide-x divide-white/20 dark:divide-white/5">
             {weekDays.map((day) => {
               const dayTasks = filteredTasks.filter(t => t.date === day.dateStr);
-              const isToday = new Date().toISOString().split('T')[0] === day.dateStr;
+              const isToday = getLocalDateString() === day.dateStr;
 
               return (
                 <div
