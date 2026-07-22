@@ -64,7 +64,7 @@ export const UserSelection: React.FC = () => {
             <UserIcon className="w-7 h-7" />
           </div>
           <h1 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-white">
-            CalendarProMax
+            GYATLENDAR
           </h1>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
             Choose a profile or create a new one to log your tasks and earnings.

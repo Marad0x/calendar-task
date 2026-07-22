@@ -137,7 +137,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, onQuickAdd }) => {
               <Sparkles className="w-4.5 h-4.5" />
             </div>
             <span className="font-bold text-gray-900 dark:text-white tracking-tight text-sm font-sans">
-              CalendarProMax
+              GYATLENDAR
             </span>
           </div>
         </div>
@@ -232,7 +232,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, onQuickAdd }) => {
               className="w-64 max-w-[80vw] h-full bg-white dark:bg-gray-900 flex flex-col border-r border-gray-100 dark:border-gray-800"
             >
               <div className="h-16 flex items-center justify-between px-6 border-b border-gray-100 dark:border-gray-800">
-                <span className="font-bold text-gray-900 dark:text-white text-sm">CalendarProMax</span>
+                <span className="font-bold text-gray-900 dark:text-white text-sm">GYATLENDAR</span>
                 <button onClick={() => setMobileMenuOpen(false)} className="p-1 text-gray-400 hover:text-gray-900">
                   <X className="w-5 h-5" />
                 </button>

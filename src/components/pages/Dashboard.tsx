@@ -1,13 +1,13 @@
 import React, { useMemo, useState } from 'react';
 import { useApp } from '../../context/AppContext';
-import { 
-  DollarSign, 
-  Calendar, 
-  Briefcase, 
-  Clock, 
-  CheckCircle2, 
-  Flame, 
-  ArrowUpRight, 
+import {
+  DollarSign,
+  Calendar,
+  Briefcase,
+  Clock,
+  CheckCircle2,
+  Flame,
+  ArrowUpRight,
   User as UserIcon,
   Plus,
   Link,
@@ -33,7 +33,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onQuickAdd, onViewTask }) 
   // Compute profile statistics dynamically when requested
   const selectedProfileDetails = useMemo(() => {
     if (!selectedProfileUserId) return null;
-    
+
     const u = users.find(user => user.id === selectedProfileUserId);
     if (!u) return null;
 
@@ -53,7 +53,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onQuickAdd, onViewTask }) 
 
     const now = new Date();
     const todayStr = getLocalDateString(now);
-    
+
     // Start of week (Sunday)
     const sunday = new Date(now);
     sunday.setDate(now.getDate() - now.getDay());
@@ -64,7 +64,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onQuickAdd, onViewTask }) 
 
     // Today's tasks (all logged today)
     const todayTasks = userTasks.filter(t => t.date === todayStr);
-    
+
     // Today's completed tasks
     const completedToday = todayTasks.filter(t => t.status === 'Completed');
 
@@ -123,7 +123,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onQuickAdd, onViewTask }) 
       { value: 'this-month', label: 'This Month' },
       { value: 'all-time', label: 'All Time' },
     ];
-    
+
     // Add past 5 months
     const now = new Date();
     for (let i = 1; i <= 5; i++) {
@@ -197,7 +197,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onQuickAdd, onViewTask }) 
   const stats = useMemo(() => {
     const now = new Date();
     const todayStr = getLocalDateString(now);
-    
+
     // Start of week (Sunday)
     const sunday = new Date(now);
     sunday.setDate(now.getDate() - now.getDay());
@@ -208,7 +208,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onQuickAdd, onViewTask }) 
 
     const todayTasks = tasks.filter(t => t.date === todayStr);
     const completedToday = todayTasks.filter(t => t.status === 'Completed');
-    
+
     const weekTasks = tasks.filter(t => t.date >= weekStartStr);
     const completedThisWeek = weekTasks.filter(t => t.status === 'Completed');
 
@@ -271,6 +271,28 @@ export const Dashboard: React.FC<DashboardProps> = ({ onQuickAdd, onViewTask }) 
     const allTimeUsd = tasks.reduce((sum, t) => sum + (t.status === 'Completed' ? t.usdRate : 0), 0);
     const allTimePhp = tasks.reduce((sum, t) => sum + (t.status === 'Completed' ? t.phpAmount : 0), 0);
 
+    let allPending: any[] = [];
+    users.forEach(u => {
+      let userTasks: Task[] = [];
+      if (u.id === currentUser?.id) {
+        userTasks = tasks;
+      } else {
+        const stored = localStorage.getItem(`freelancer_tasks_${u.id}`);
+        if (stored) {
+          try {
+            userTasks = JSON.parse(stored);
+          } catch (e) {
+            // ignore
+          }
+        }
+      }
+      const pending = userTasks.filter(t => t.status === 'Pending');
+      pending.forEach(t => {
+        allPending.push({ ...t, userName: u.name });
+      });
+    });
+    allPending.sort((a, b) => a.date.localeCompare(b.date));
+
     return {
       todayUsd,
       todayPhp,
@@ -284,9 +306,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ onQuickAdd, onViewTask }) 
       topClient,
       completedThisWeekCount: completedThisWeek.length,
       recentTasks: tasks.slice(0, 5),
-      upcomingTasks: tasks.filter(t => t.status === 'Pending').slice(0, 3)
+      upcomingTasks: allPending.slice(0, 5)
     };
-  }, [tasks, clients]);
+  }, [tasks, clients, users, currentUser]);
 
   const [activityDate, setActivityDate] = useState(() => new Date());
 
@@ -473,9 +495,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ onQuickAdd, onViewTask }) 
                           className="w-3 h-3 rounded-full shrink-0"
                           style={{
                             backgroundColor: task.status === 'Completed' ? '#10b981' :
-                                             task.status === 'Pending' ? '#f59e0b' :
-                                             task.status === 'Revision' ? '#3b82f6' :
-                                             '#f43f5e'
+                              task.status === 'Pending' ? '#f59e0b' :
+                                task.status === 'Revision' ? '#3b82f6' :
+                                  '#f43f5e'
                           }}
                         />
                         <div className="min-w-0">
@@ -489,17 +511,17 @@ export const Dashboard: React.FC<DashboardProps> = ({ onQuickAdd, onViewTask }) 
                               <div className="p-0.5 rounded-md border transition-all flex items-center justify-center shrink-0"
                                 style={{
                                   backgroundColor: task.status === 'Completed' ? 'rgba(16, 185, 129, 0.08)' :
-                                                   task.status === 'Pending' ? 'rgba(245, 158, 11, 0.08)' :
-                                                   task.status === 'Revision' ? 'rgba(59, 130, 246, 0.08)' :
-                                                   'rgba(244, 63, 94, 0.08)',
+                                    task.status === 'Pending' ? 'rgba(245, 158, 11, 0.08)' :
+                                      task.status === 'Revision' ? 'rgba(59, 130, 246, 0.08)' :
+                                        'rgba(244, 63, 94, 0.08)',
                                   borderColor: task.status === 'Completed' ? 'rgba(16, 185, 129, 0.2)' :
-                                               task.status === 'Pending' ? 'rgba(245, 158, 11, 0.2)' :
-                                               task.status === 'Revision' ? 'rgba(59, 130, 246, 0.2)' :
-                                               'rgba(244, 63, 94, 0.2)',
+                                    task.status === 'Pending' ? 'rgba(245, 158, 11, 0.2)' :
+                                      task.status === 'Revision' ? 'rgba(59, 130, 246, 0.2)' :
+                                        'rgba(244, 63, 94, 0.2)',
                                   color: task.status === 'Completed' ? '#10b981' :
-                                         task.status === 'Pending' ? '#f59e0b' :
-                                         task.status === 'Revision' ? '#3b82f6' :
-                                         '#f43f5e'
+                                    task.status === 'Pending' ? '#f59e0b' :
+                                      task.status === 'Revision' ? '#3b82f6' :
+                                        '#f43f5e'
                                 }}
                               >
                                 {task.status === 'Completed' && <CheckCircle2 className="w-2.5 h-2.5" />}
@@ -510,9 +532,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ onQuickAdd, onViewTask }) 
                               <span className="text-[9px] font-bold tracking-wide uppercase"
                                 style={{
                                   color: task.status === 'Completed' ? '#10b981' :
-                                         task.status === 'Pending' ? '#f59e0b' :
-                                         task.status === 'Revision' ? '#3b82f6' :
-                                         '#f43f5e'
+                                    task.status === 'Pending' ? '#f59e0b' :
+                                      task.status === 'Revision' ? '#3b82f6' :
+                                        '#f43f5e'
                                 }}
                               >
                                 {task.status}
@@ -554,7 +576,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onQuickAdd, onViewTask }) 
               <h3 className="font-bold text-gray-900 dark:text-white text-sm tracking-tight flex items-center gap-2">
                 <Calendar className="w-4 h-4 text-indigo-500" /> Workspace Activity Grid (Last 15 Weeks)
               </h3>
-              
+
               {/* Navigation Controls */}
               <div className="flex items-center gap-1.5">
                 <button
@@ -569,7 +591,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onQuickAdd, onViewTask }) 
                 >
                   <ChevronLeft className="w-3.5 h-3.5" />
                 </button>
-                
+
                 <button
                   id="activity-today-month"
                   onClick={() => setActivityDate(new Date())}
@@ -593,7 +615,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onQuickAdd, onViewTask }) 
                 </button>
               </div>
             </div>
-            
+
             <div className="overflow-x-auto pb-2 -mx-2 px-2 scrollbar-thin flex justify-center">
               <div className="flex flex-col items-center py-1">
                 {/* Column Headers - Small Single Letters */}
@@ -613,19 +635,17 @@ export const Dashboard: React.FC<DashboardProps> = ({ onQuickAdd, onViewTask }) 
                     <div
                       key={idx}
                       id={`heatmap-cell-${day.dateStr}`}
-                      className={`w-6 h-6 sm:w-7 sm:h-7 rounded-md transition-all border border-black/5 dark:border-white/5 relative group cursor-pointer flex items-center justify-center hover:scale-110 ${
-                        !day.isCurrentMonth ? 'opacity-30' : ''
-                      } ${
-                        day.level === 0
+                      className={`w-6 h-6 sm:w-7 sm:h-7 rounded-md transition-all border border-black/5 dark:border-white/5 relative group cursor-pointer flex items-center justify-center hover:scale-110 ${!day.isCurrentMonth ? 'opacity-30' : ''
+                        } ${day.level === 0
                           ? 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500 hover:bg-gray-200 dark:hover:bg-gray-700'
                           : day.level === 1
-                          ? 'bg-emerald-100/70 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-950/50'
-                          : day.level === 2
-                          ? 'bg-emerald-200 dark:bg-emerald-900/40 text-emerald-800 dark:text-emerald-300 hover:bg-emerald-300/80 dark:hover:bg-emerald-900/60'
-                          : day.level === 3
-                          ? 'bg-emerald-400 dark:bg-emerald-700 text-emerald-950 dark:text-emerald-100 hover:bg-emerald-500 dark:hover:bg-emerald-600'
-                          : 'bg-emerald-600 dark:bg-emerald-500 text-white hover:bg-emerald-700 dark:hover:bg-emerald-400'
-                      }`}
+                            ? 'bg-emerald-100/70 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-950/50'
+                            : day.level === 2
+                              ? 'bg-emerald-200 dark:bg-emerald-900/40 text-emerald-800 dark:text-emerald-300 hover:bg-emerald-300/80 dark:hover:bg-emerald-900/60'
+                              : day.level === 3
+                                ? 'bg-emerald-400 dark:bg-emerald-700 text-emerald-950 dark:text-emerald-100 hover:bg-emerald-500 dark:hover:bg-emerald-600'
+                                : 'bg-emerald-600 dark:bg-emerald-500 text-white hover:bg-emerald-700 dark:hover:bg-emerald-400'
+                        }`}
                     >
                       {/* Day Number */}
                       <span className="text-[9px] sm:text-[10px] font-bold font-mono select-none">
@@ -643,7 +663,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onQuickAdd, onViewTask }) 
                 </div>
               </div>
             </div>
-            
+
             <div className="flex flex-col sm:flex-row items-center justify-between gap-3 mt-4 text-[10px] text-gray-400 dark:text-gray-500 font-mono">
               <span className="italic text-center sm:text-left">Grid levels based on task volume and completed earnings</span>
               <div className="flex items-center gap-1.5 bg-gray-50 dark:bg-white/5 px-2.5 py-1 rounded-xl border border-black/5 dark:border-white/5">
@@ -697,7 +717,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onQuickAdd, onViewTask }) 
           <div className="glass-card rounded-2xl shadow-sm p-6 relative overflow-hidden">
             <div className="flex items-center justify-between gap-2 mb-4">
               <h3 className="font-bold text-gray-900 dark:text-white text-sm tracking-tight flex items-center gap-2">
-                <UserIcon className="w-4 h-4 text-purple-500" /> Freelancer Leaderboard
+                <UserIcon className="w-4 h-4 text-purple-500" /> Leaderboard
               </h3>
               <select
                 id="leaderboard-period-select"
@@ -719,26 +739,25 @@ export const Dashboard: React.FC<DashboardProps> = ({ onQuickAdd, onViewTask }) 
                   'bg-slate-300 text-slate-800',  // 2nd
                   'bg-amber-600 text-amber-50',   // 3rd
                 ];
-                const rankBadge = idx < 3 
+                const rankBadge = idx < 3
                   ? <span className={`w-5 h-5 rounded-full flex items-center justify-center font-bold text-[10px] ${rankColors[idx]}`}>{idx + 1}</span>
                   : <span className="w-5 h-5 flex items-center justify-center font-semibold text-[10px] text-gray-400">{idx + 1}</span>;
 
                 return (
-                  <div 
-                    key={item.id} 
+                  <div
+                    key={item.id}
                     onClick={() => setSelectedProfileUserId(item.id)}
-                    className={`flex items-center justify-between p-2 rounded-xl transition-all cursor-pointer ${
-                      item.isCurrent 
-                        ? 'bg-emerald-500/10 border border-emerald-500/20 dark:bg-emerald-500/5 hover:bg-emerald-500/15' 
+                    className={`flex items-center justify-between p-2 rounded-xl transition-all cursor-pointer ${item.isCurrent
+                        ? 'bg-emerald-500/10 border border-emerald-500/20 dark:bg-emerald-500/5 hover:bg-emerald-500/15'
                         : 'hover:bg-gray-50/80 dark:hover:bg-gray-800/20 border border-transparent hover:border-gray-150 dark:hover:border-white/5 shadow-xs'
-                    }`}
+                      }`}
                     title={`Click to view ${item.name}'s statistics`}
                   >
                     <div className="flex items-center gap-2.5 min-w-0">
                       {rankBadge}
-                      <img 
-                        src={item.avatar} 
-                        alt={item.name} 
+                      <img
+                        src={item.avatar}
+                        alt={item.name}
                         className="w-7 h-7 rounded-lg bg-gray-100 dark:bg-gray-800 shrink-0 object-cover border border-gray-200 dark:border-white/5"
                         referrerPolicy="no-referrer"
                       />
@@ -763,7 +782,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onQuickAdd, onViewTask }) 
                 );
               })}
             </div>
-            
+
             <div className="mt-4 pt-3 border-t border-black/5 dark:border-white/5 text-[10px] text-gray-400 leading-normal text-center italic">
               "Keep logging your task budgets to top the standings! 🎉"
             </div>
@@ -774,7 +793,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onQuickAdd, onViewTask }) 
             <h3 className="font-bold text-gray-900 dark:text-white text-sm tracking-tight mb-4 flex items-center gap-2">
               <Clock className="w-4 h-4 text-amber-500" /> Pending Work Queue
             </h3>
-            
+
             {stats.upcomingTasks.length === 0 ? (
               <p className="text-xs text-gray-400 text-center py-4">No pending tasks. You are all cleared!</p>
             ) : (
@@ -789,19 +808,21 @@ export const Dashboard: React.FC<DashboardProps> = ({ onQuickAdd, onViewTask }) 
                     >
                       <div className="flex justify-between items-start gap-2">
                         <span className="text-xs font-semibold text-gray-800 dark:text-gray-200 truncate">{task.title}</span>
-                        <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full shrink-0 ${
-                          task.priority === 'High' 
+                        <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full shrink-0 ${task.priority === 'High'
                             ? 'bg-rose-50 dark:bg-rose-950/30 text-rose-600 border border-rose-100 dark:border-rose-900/30'
                             : task.priority === 'Medium'
-                            ? 'bg-amber-50 dark:bg-amber-950/30 text-amber-600 border border-amber-100 dark:border-amber-900/30'
-                            : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400'
-                        }`}>
+                              ? 'bg-amber-50 dark:bg-amber-950/30 text-amber-600 border border-amber-100 dark:border-amber-900/30'
+                              : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400'
+                          }`}>
                           {task.priority}
                         </span>
                       </div>
                       <div className="flex items-center justify-between text-[10px] text-gray-400 mt-2">
                         <span>{client?.name || 'Workspace'}</span>
-                        <span>{task.date}</span>
+                        <div className="flex items-center gap-2">
+                          {task.userName && <span className="font-semibold text-amber-500/80">{task.userName}</span>}
+                          <span>{task.date}</span>
+                        </div>
                       </div>
                     </div>
                   );
@@ -814,12 +835,12 @@ export const Dashboard: React.FC<DashboardProps> = ({ onQuickAdd, onViewTask }) 
 
       {/* Profile Details Modal */}
       {selectedProfileDetails && (
-        <div 
-          id="profile-details-modal" 
+        <div
+          id="profile-details-modal"
           className="fixed inset-0 bg-black/70 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-fade-in"
           onClick={() => setSelectedProfileUserId(null)}
         >
-          <div 
+          <div
             className="glass-card rounded-3xl shadow-2xl max-w-md w-full overflow-hidden border border-white/15 dark:border-white/5 animate-scale-up"
             onClick={(e) => e.stopPropagation()}
           >
@@ -834,18 +855,17 @@ export const Dashboard: React.FC<DashboardProps> = ({ onQuickAdd, onViewTask }) 
               </button>
 
               <div className="flex items-center gap-4 mt-2">
-                <img 
+                <img
                   src={selectedProfileDetails.user.avatar || `https://api.dicebear.com/7.x/adventurer/svg?seed=${encodeURIComponent(selectedProfileDetails.user.name)}`}
                   alt={selectedProfileDetails.user.name}
                   className="w-16 h-16 rounded-2xl bg-white dark:bg-black/40 border-2 border-emerald-500 shadow-md p-1 object-contain shrink-0"
                   referrerPolicy="no-referrer"
                 />
                 <div className="min-w-0">
-                  <span className={`inline-flex items-center gap-1 text-[9px] font-extrabold px-2 py-0.5 rounded-full uppercase tracking-widest ${
-                    selectedProfileDetails.user.id === currentUser?.id
+                  <span className={`inline-flex items-center gap-1 text-[9px] font-extrabold px-2 py-0.5 rounded-full uppercase tracking-widest ${selectedProfileDetails.user.id === currentUser?.id
                       ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
                       : 'bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20'
-                  }`}>
+                    }`}>
                     {selectedProfileDetails.user.id === currentUser?.id ? 'Active User' : 'Freelancer'}
                   </span>
                   <h3 className="text-lg font-black text-gray-900 dark:text-white mt-1 truncate">
@@ -861,7 +881,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onQuickAdd, onViewTask }) 
             {/* Content Area - Clean grid of requested profile metrics */}
             <div className="p-6 space-y-5">
               <h4 className="text-xs font-bold text-gray-400 uppercase tracking-widest block font-mono">Performance Stats</h4>
-              
+
               <div className="grid grid-cols-2 gap-4">
                 {/* 1. Logged Today */}
                 <div className="bg-gray-50/50 dark:bg-black/20 border border-gray-150 dark:border-white/5 p-4 rounded-2xl">
