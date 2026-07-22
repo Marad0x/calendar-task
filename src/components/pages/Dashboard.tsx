@@ -509,24 +509,15 @@ export const Dashboard: React.FC<DashboardProps> = ({ onQuickAdd, onViewTask }) 
                           <p className="text-sm font-semibold text-gray-900 dark:text-white truncate group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
                             {task.title}
                           </p>
-                          <div className="flex items-center gap-2 text-[11px] text-gray-400 mt-1">
-                            <span className="font-semibold text-gray-500">{client?.name || 'Workspace'}</span>
-                            <span>•</span>
+                          <div className="flex items-center flex-wrap gap-x-2 gap-y-1 text-[11px] text-gray-400 mt-1">
                             {task.userName && (
                               <>
                                 <span className="font-semibold text-amber-500/80">{task.userName}</span>
                                 <span>•</span>
                               </>
                             )}
-                            <span className="font-mono">
-                              {(() => {
-                                if (!task.date) return '';
-                                const [y, m, d] = task.date.split('-');
-                                return `${m}/${d}/${y}`;
-                              })()}
-                            </span>
-                            <span>•</span>
-                            <div className="inline-flex items-center gap-1" title={task.status}>
+                            
+                            <div className="inline-flex items-center gap-1 shrink-0" title={task.status}>
                               <div className="p-0.5 rounded-md border transition-all flex items-center justify-center shrink-0"
                                 style={{
                                   backgroundColor: task.status === 'Completed' ? 'rgba(16, 185, 129, 0.08)' :
@@ -559,10 +550,22 @@ export const Dashboard: React.FC<DashboardProps> = ({ onQuickAdd, onViewTask }) 
                                 {task.status === 'Pending' ? 'TO DO' : task.status}
                               </span>
                             </div>
+
+                            <span className="hidden sm:inline text-gray-500">•</span>
+                            <span className="hidden sm:inline font-mono">
+                              {(() => {
+                                if (!task.date) return '';
+                                const [y, m, d] = task.date.split('-');
+                                return `${m}/${d}/${y}`;
+                              })()}
+                            </span>
+
                             {task.projectLink && (
                               <>
-                                <span>•</span>
-                                <span className="inline-flex items-center gap-1 bg-emerald-500/5 px-1.5 py-0.5 rounded text-[10px] text-emerald-500"><Link className="w-2.5 h-2.5" /> Google Drive / Link</span>
+                                <span className="hidden sm:inline text-gray-500">•</span>
+                                <span className="hidden sm:inline-flex shrink-0 items-center gap-1 bg-emerald-500/5 px-1.5 py-0.5 rounded text-[10px] text-emerald-500">
+                                  <Link className="w-2.5 h-2.5" /> Google Drive / Link
+                                </span>
                               </>
                             )}
                           </div>
