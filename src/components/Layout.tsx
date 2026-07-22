@@ -17,7 +17,7 @@ import {
   X, 
   User as UserIcon,
   LogOut,
-  Sparkles,
+  DollarSign,
   Plus,
   TrendingUp,
   FileText
@@ -134,7 +134,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, onQuickAdd }) => {
         <div className="h-16 flex items-center px-6 border-b border-white/20 dark:border-white/5">
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-xl bg-emerald-500 flex items-center justify-center text-white shadow-sm shadow-emerald-500/10 shrink-0">
-              <Sparkles className="w-4.5 h-4.5" />
+              <DollarSign className="w-4.5 h-4.5" />
             </div>
             <span className="font-bold text-gray-900 dark:text-white tracking-tight text-sm font-sans">
               GYATLENDAR
