@@ -8,7 +8,8 @@ import {
   deleteDoc, 
   query, 
   where,
-  writeBatch
+  writeBatch,
+  onSnapshot
 } from 'firebase/firestore';
 import { db } from '../firebase';
 
@@ -28,6 +29,7 @@ interface AppContextType {
   users: User[];
   clients: Client[];
   tasks: Task[];
+  allTasks: Task[];
   activeTab: string;
   setActiveTab: (tab: string) => void;
   darkMode: boolean;
@@ -128,6 +130,21 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return [];
   });
 
+  const [allTasks, setAllTasks] = useState<Task[]>(() => {
+    let loaded: Task[] = [];
+    const keys = Object.keys(localStorage);
+    for (const key of keys) {
+      if (key.startsWith('freelancer_tasks_')) {
+        try {
+          const parsed = JSON.parse(localStorage.getItem(key)!);
+          loaded = [...loaded, ...parsed];
+        } catch (e) {}
+      }
+    }
+    loaded.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    return loaded;
+  });
+
   const [activeTab, setActiveTab] = useState<string>('dashboard');
   const [darkMode, setDarkMode] = useState<boolean>(() => {
     const lastUserId = localStorage.getItem('freelancer_last_user_id');
@@ -202,6 +219,42 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   // Fetch exchange rate on app startup
   useEffect(() => {
     fetchLatestExchangeRate();
+  }, []);
+
+  // Listen to all tasks globally to keep leaderboard and recent tasks live
+  useEffect(() => {
+    const q = query(collection(db, 'tasks'));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const tasksList: Task[] = [];
+      snapshot.forEach(doc => {
+        tasksList.push(doc.data() as Task);
+      });
+      tasksList.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      
+      setAllTasks(tasksList);
+      
+      // Keep local storage up to date
+      const tasksByUser: Record<string, Task[]> = {};
+      tasksList.forEach(t => {
+        if (!tasksByUser[t.userId]) tasksByUser[t.userId] = [];
+        tasksByUser[t.userId].push(t);
+      });
+      Object.entries(tasksByUser).forEach(([userId, userTasks]) => {
+        localStorage.setItem(`freelancer_tasks_${userId}`, JSON.stringify(userTasks));
+      });
+      
+      // Update current user's tasks state so it's live across devices
+      setCurrentUser(prevUser => {
+        if (prevUser) {
+          setTasks(tasksByUser[prevUser.id] || []);
+        }
+        return prevUser;
+      });
+    }, (error) => {
+      console.error("Error listening to all tasks: ", error);
+    });
+    
+    return () => unsubscribe();
   }, []);
 
   // Load tasks and clients for the current user whenever currentUser changes
@@ -726,6 +779,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         users,
         clients,
         tasks,
+        allTasks,
         activeTab,
         setActiveTab,
         darkMode,

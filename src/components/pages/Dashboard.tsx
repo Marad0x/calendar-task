@@ -25,7 +25,7 @@ interface DashboardProps {
 }
 
 export const Dashboard: React.FC<DashboardProps> = ({ onQuickAdd, onViewTask }) => {
-  const { currentUser, users, tasks, clients, setActiveTab } = useApp();
+  const { currentUser, users, tasks, allTasks, clients, setActiveTab } = useApp();
 
   // Selected profile user for stats view
   const [selectedProfileUserId, setSelectedProfileUserId] = useState<string | null>(null);
@@ -41,14 +41,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onQuickAdd, onViewTask }) 
     if (u.id === currentUser?.id) {
       userTasks = tasks;
     } else {
-      const stored = localStorage.getItem(`freelancer_tasks_${u.id}`);
-      if (stored) {
-        try {
-          userTasks = JSON.parse(stored);
-        } catch (e) {
-          // ignore
-        }
-      }
+      userTasks = allTasks?.filter(t => t.userId === u.id) || [];
     }
 
     const now = new Date();
@@ -99,7 +92,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onQuickAdd, onViewTask }) 
       earnedMonthUsd,
       earnedMonthPhp
     };
-  }, [selectedProfileUserId, users, currentUser, tasks]);
+  }, [selectedProfileUserId, users, currentUser, tasks, allTasks]);
 
   // Get current greeting based on time of day
   const greeting = useMemo(() => {
@@ -167,17 +160,10 @@ export const Dashboard: React.FC<DashboardProps> = ({ onQuickAdd, onViewTask }) 
         totalUsd = filtered.reduce((sum, t) => sum + (t.status === 'Completed' ? t.usdRate : 0), 0);
         totalPhp = filtered.reduce((sum, t) => sum + (t.status === 'Completed' ? t.phpAmount : 0), 0);
       } else {
-        const storedTasks = localStorage.getItem(`freelancer_tasks_${u.id}`);
-        if (storedTasks) {
-          try {
-            const otherTasks = JSON.parse(storedTasks);
-            const filtered = filterTasksByPeriod(otherTasks, leaderboardPeriod);
-            totalUsd = filtered.reduce((sum: number, t: any) => sum + (t.status === 'Completed' ? t.usdRate : 0), 0);
-            totalPhp = filtered.reduce((sum: number, t: any) => sum + (t.status === 'Completed' ? t.phpAmount : 0), 0);
-          } catch (e) {
-            // ignore
-          }
-        }
+        const otherTasks = allTasks?.filter(t => t.userId === u.id) || [];
+        const filtered = filterTasksByPeriod(otherTasks, leaderboardPeriod);
+        totalUsd = filtered.reduce((sum: number, t: any) => sum + (t.status === 'Completed' ? t.usdRate : 0), 0);
+        totalPhp = filtered.reduce((sum: number, t: any) => sum + (t.status === 'Completed' ? t.phpAmount : 0), 0);
       }
       return {
         id: u.id,
@@ -191,7 +177,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onQuickAdd, onViewTask }) 
     });
 
     return userList.sort((a, b) => b.totalUsd - a.totalUsd);
-  }, [users, currentUser, tasks, leaderboardPeriod]);
+  }, [users, currentUser, tasks, leaderboardPeriod, allTasks]);
 
   // Statistics calculations
   const stats = useMemo(() => {
@@ -272,23 +258,16 @@ export const Dashboard: React.FC<DashboardProps> = ({ onQuickAdd, onViewTask }) 
     const allTimePhp = tasks.reduce((sum, t) => sum + (t.status === 'Completed' ? t.phpAmount : 0), 0);
 
     let allPending: any[] = [];
-    let allTasks: any[] = [];
+    let localAllTasks: any[] = [];
     users.forEach(u => {
       let userTasks: Task[] = [];
       if (u.id === currentUser?.id) {
         userTasks = tasks;
       } else {
-        const stored = localStorage.getItem(`freelancer_tasks_${u.id}`);
-        if (stored) {
-          try {
-            userTasks = JSON.parse(stored);
-          } catch (e) {
-            // ignore
-          }
-        }
+        userTasks = allTasks?.filter(t => t.userId === u.id) || [];
       }
       userTasks.forEach(t => {
-        allTasks.push({ ...t, userName: u.name });
+        localAllTasks.push({ ...t, userName: u.name });
       });
       const pending = userTasks.filter(t => t.status === 'Pending');
       pending.forEach(t => {
@@ -296,7 +275,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onQuickAdd, onViewTask }) 
       });
     });
     allPending.sort((a, b) => a.date.localeCompare(b.date));
-    allTasks.sort((a, b) => b.date.localeCompare(a.date));
+    localAllTasks.sort((a, b) => b.date.localeCompare(a.date));
 
     return {
       todayUsd,
@@ -310,10 +289,10 @@ export const Dashboard: React.FC<DashboardProps> = ({ onQuickAdd, onViewTask }) 
       streak,
       topClient,
       completedThisWeekCount: completedThisWeek.length,
-      recentTasks: allTasks.slice(0, 5),
+      recentTasks: localAllTasks.slice(0, 5),
       upcomingTasks: allPending.slice(0, 5)
     };
-  }, [tasks, clients, users, currentUser]);
+  }, [tasks, clients, users, currentUser, allTasks]);
 
   const [activityDate, setActivityDate] = useState(() => new Date());
 
