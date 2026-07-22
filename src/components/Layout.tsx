@@ -199,7 +199,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, onQuickAdd }) => {
         <div className="p-4 border-t border-white/20 dark:border-white/5">
           <div className="p-4 rounded-2xl bg-indigo-900/90 dark:bg-indigo-950/60 text-white shadow-lg space-y-2">
             <p className="text-[9px] text-indigo-200 uppercase font-bold tracking-widest font-mono">Active Workspace</p>
-            <p className="font-bold text-xs">Living Core</p>
+            <img src="/LIVINGCORE-LOGO.png" alt="Living Core" className="h-6 w-auto object-contain" />
             <div className="flex justify-between items-center text-[10px] mt-4 opacity-90 font-medium">
               <span>Syncing Active</span>
               <div className="flex items-center gap-1">
