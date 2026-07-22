@@ -710,12 +710,16 @@ export const Dashboard: React.FC<DashboardProps> = ({ onQuickAdd, onViewTask }) 
             </h3>
             {stats.topClient ? (
               <div className="flex items-center gap-3">
-                <div
-                  className="w-10 h-10 rounded-xl flex items-center justify-center text-white font-bold text-sm shadow-xs shrink-0"
-                  style={{ backgroundColor: stats.topClient.color }}
-                >
-                  {stats.topClient.name.split(' ').map(n => n[0]).join('').substring(0, 2)}
-                </div>
+                {stats.topClient.id === 'living-core' ? (
+                  <img src="/LIVINGCORE-LOGO.png" alt="Living Core" className="w-10 h-10 rounded-xl object-contain bg-white shrink-0" />
+                ) : (
+                  <div
+                    className="w-10 h-10 rounded-xl flex items-center justify-center text-white font-bold text-sm shadow-xs shrink-0"
+                    style={{ backgroundColor: stats.topClient.color }}
+                  >
+                    {stats.topClient.name.split(' ').map(n => n[0]).join('').substring(0, 2)}
+                  </div>
+                )}
                 <div>
                   <h4 className="font-bold text-gray-900 dark:text-white text-sm">
                     {stats.topClient.name}
