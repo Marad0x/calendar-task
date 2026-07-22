@@ -468,17 +468,31 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ onQuickAdd, onEditTa
                           <span className="shrink-0 font-extrabold font-mono text-[9px] bg-gray-100 dark:bg-gray-800 text-black dark:text-white px-1 py-0.2 rounded mr-1 border border-gray-200 dark:border-gray-700">
                             ${task.usdRate.toFixed(1)}
                           </span>
-                          <button
-                            id={`duplicate-task-btn-${task.id}`}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              onDuplicateTask(task.id);
-                            }}
-                            className="opacity-0 group-hover/task:opacity-100 p-0.5 hover:bg-black/10 dark:hover:bg-white/10 rounded ml-1 text-current shrink-0"
-                            title="Duplicate previous task"
-                          >
-                            <Copy className="w-2.5 h-2.5" />
-                          </button>
+                          {(task.status === 'Pending' || task.status === 'Revision') ? (
+                            <button
+                              id={`complete-task-btn-${task.id}`}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                updateTask(task.id, { status: 'Completed' });
+                              }}
+                              className="opacity-0 group-hover/task:opacity-100 p-0.5 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 rounded ml-1 shrink-0"
+                              title="Mark as Completed"
+                            >
+                              <CheckCircle2 className="w-2.5 h-2.5" />
+                            </button>
+                          ) : (
+                            <button
+                              id={`duplicate-task-btn-${task.id}`}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onDuplicateTask(task.id);
+                              }}
+                              className="opacity-0 group-hover/task:opacity-100 p-0.5 hover:bg-black/10 dark:hover:bg-white/10 rounded ml-1 text-current shrink-0"
+                              title="Duplicate previous task"
+                            >
+                              <Copy className="w-2.5 h-2.5" />
+                            </button>
+                          )}
                         </div>
                       );
                     })}
