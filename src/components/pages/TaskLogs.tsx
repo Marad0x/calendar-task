@@ -186,7 +186,7 @@ export const TaskLogs: React.FC<TaskLogsProps> = ({ onEditTask }) => {
             >
               <option value="all">All Statuses</option>
               <option value="Completed">Completed</option>
-              <option value="Pending">Pending</option>
+              <option value="Pending">TO DO</option>
               <option value="Revision">Revision</option>
               <option value="Cancelled">Cancelled</option>
             </select>
@@ -278,7 +278,7 @@ export const TaskLogs: React.FC<TaskLogsProps> = ({ onEditTask }) => {
                                      '#f43f5e'
                             }}
                           >
-                            {task.status}
+                            {task.status === 'Pending' ? 'TO DO' : task.status}
                           </span>
                         </div>
                       </td>

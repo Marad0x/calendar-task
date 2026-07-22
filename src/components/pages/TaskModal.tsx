@@ -345,7 +345,7 @@ export const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onClose, taskToEdi
                   className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-white focus:outline-none text-xs font-medium"
                 >
                   <option value="Completed">Completed</option>
-                  <option value="Pending">Pending</option>
+                  <option value="Pending">TO DO</option>
                   <option value="Revision">Revision</option>
                   <option value="Cancelled">Cancelled</option>
                 </select>

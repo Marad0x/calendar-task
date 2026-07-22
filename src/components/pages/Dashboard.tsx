@@ -272,6 +272,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onQuickAdd, onViewTask }) 
     const allTimePhp = tasks.reduce((sum, t) => sum + (t.status === 'Completed' ? t.phpAmount : 0), 0);
 
     let allPending: any[] = [];
+    let allTasks: any[] = [];
     users.forEach(u => {
       let userTasks: Task[] = [];
       if (u.id === currentUser?.id) {
@@ -286,12 +287,16 @@ export const Dashboard: React.FC<DashboardProps> = ({ onQuickAdd, onViewTask }) 
           }
         }
       }
+      userTasks.forEach(t => {
+        allTasks.push({ ...t, userName: u.name });
+      });
       const pending = userTasks.filter(t => t.status === 'Pending');
       pending.forEach(t => {
         allPending.push({ ...t, userName: u.name });
       });
     });
     allPending.sort((a, b) => a.date.localeCompare(b.date));
+    allTasks.sort((a, b) => b.date.localeCompare(a.date));
 
     return {
       todayUsd,
@@ -305,7 +310,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onQuickAdd, onViewTask }) 
       streak,
       topClient,
       completedThisWeekCount: completedThisWeek.length,
-      recentTasks: tasks.slice(0, 5),
+      recentTasks: allTasks.slice(0, 5),
       upcomingTasks: allPending.slice(0, 5)
     };
   }, [tasks, clients, users, currentUser]);
@@ -507,6 +512,20 @@ export const Dashboard: React.FC<DashboardProps> = ({ onQuickAdd, onViewTask }) 
                           <div className="flex items-center gap-2 text-[11px] text-gray-400 mt-1">
                             <span className="font-semibold text-gray-500">{client?.name || 'Workspace'}</span>
                             <span>•</span>
+                            {task.userName && (
+                              <>
+                                <span className="font-semibold text-amber-500/80">{task.userName}</span>
+                                <span>•</span>
+                              </>
+                            )}
+                            <span className="font-mono">
+                              {(() => {
+                                if (!task.date) return '';
+                                const [y, m, d] = task.date.split('-');
+                                return `${m}/${d}/${y}`;
+                              })()}
+                            </span>
+                            <span>•</span>
                             <div className="inline-flex items-center gap-1" title={task.status}>
                               <div className="p-0.5 rounded-md border transition-all flex items-center justify-center shrink-0"
                                 style={{
@@ -537,7 +556,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onQuickAdd, onViewTask }) 
                                         '#f43f5e'
                                 }}
                               >
-                                {task.status}
+                                {task.status === 'Pending' ? 'TO DO' : task.status}
                               </span>
                             </div>
                             {task.projectLink && (
@@ -791,11 +810,11 @@ export const Dashboard: React.FC<DashboardProps> = ({ onQuickAdd, onViewTask }) 
           {/* Upcoming / Pending Tasks */}
           <div className="glass-card rounded-2xl shadow-sm p-6">
             <h3 className="font-bold text-gray-900 dark:text-white text-sm tracking-tight mb-4 flex items-center gap-2">
-              <Clock className="w-4 h-4 text-amber-500" /> Pending Work Queue
+              <Clock className="w-4 h-4 text-amber-500" /> TO DO Tasks
             </h3>
 
             {stats.upcomingTasks.length === 0 ? (
-              <p className="text-xs text-gray-400 text-center py-4">No pending tasks. You are all cleared!</p>
+              <p className="text-xs text-gray-400 text-center py-4">No tasks on your TO DO list. You are all cleared!</p>
             ) : (
               <div className="space-y-3">
                 {stats.upcomingTasks.map((task) => {
