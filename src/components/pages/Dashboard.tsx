@@ -155,15 +155,21 @@ export const Dashboard: React.FC<DashboardProps> = ({ onQuickAdd, onViewTask }) 
     const userList = users.map(u => {
       let totalUsd = 0;
       let totalPhp = 0;
+      let pendingUsd = 0;
+      let pendingPhp = 0;
       if (u.id === currentUser?.id) {
         const filtered = filterTasksByPeriod(tasks, leaderboardPeriod);
         totalUsd = filtered.reduce((sum, t) => sum + (t.status === 'Completed' ? t.usdRate : 0), 0);
         totalPhp = filtered.reduce((sum, t) => sum + (t.status === 'Completed' ? t.phpAmount : 0), 0);
+        pendingUsd = filtered.reduce((sum, t) => sum + (t.status === 'Pending' ? t.usdRate : 0), 0);
+        pendingPhp = filtered.reduce((sum, t) => sum + (t.status === 'Pending' ? t.phpAmount : 0), 0);
       } else {
         const otherTasks = allTasks?.filter(t => t.userId === u.id) || [];
         const filtered = filterTasksByPeriod(otherTasks, leaderboardPeriod);
         totalUsd = filtered.reduce((sum: number, t: any) => sum + (t.status === 'Completed' ? t.usdRate : 0), 0);
         totalPhp = filtered.reduce((sum: number, t: any) => sum + (t.status === 'Completed' ? t.phpAmount : 0), 0);
+        pendingUsd = filtered.reduce((sum: number, t: any) => sum + (t.status === 'Pending' ? t.usdRate : 0), 0);
+        pendingPhp = filtered.reduce((sum: number, t: any) => sum + (t.status === 'Pending' ? t.phpAmount : 0), 0);
       }
       return {
         id: u.id,
@@ -171,6 +177,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ onQuickAdd, onViewTask }) 
         avatar: u.avatar || `https://api.dicebear.com/7.x/adventurer/svg?seed=${encodeURIComponent(u.name)}`,
         totalUsd,
         totalPhp,
+        pendingUsd,
+        pendingPhp,
         isCurrent: u.id === currentUser?.id,
         isBot: false
       };
@@ -775,21 +783,36 @@ export const Dashboard: React.FC<DashboardProps> = ({ onQuickAdd, onViewTask }) 
                         </p>
                       </div>
                     </div>
-                    <div className="text-right shrink-0">
-                      <p className="text-xs font-bold text-gray-900 dark:text-white font-mono">
-                        ${item.totalUsd.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                      </p>
-                      <p className="text-[9px] text-gray-400 font-mono">
-                        ₱{item.totalPhp.toLocaleString(undefined, { maximumFractionDigits: 0 })}
-                      </p>
+                    <div className="text-right shrink-0 flex flex-col items-end gap-1.5">
+                      <div className="flex flex-col items-end">
+                        <div className="flex items-center gap-1.5 justify-end">
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-600/80 dark:text-emerald-400/80">Completed</span>
+                          <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 font-mono">
+                            ${item.totalUsd.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          </span>
+                        </div>
+                        <p className="text-[9px] text-gray-500 font-mono text-right">
+                          ₱{item.totalPhp.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                        </p>
+                      </div>
+                      {(item.pendingUsd > 0 || item.pendingPhp > 0) && (
+                        <div className="bg-amber-500/10 px-2 py-1 rounded-lg border border-amber-500/20 flex flex-col items-end">
+                          <div className="flex items-center gap-1.5 justify-end">
+                            <Clock className="w-3 h-3 text-amber-500 shrink-0" />
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-amber-600/90 dark:text-amber-400/90">To Do</span>
+                            <span className="text-xs font-bold text-amber-600 dark:text-amber-500 font-mono">
+                              ${item.pendingUsd.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                            </span>
+                          </div>
+                          <p className="text-[9px] text-amber-600/70 dark:text-amber-500/70 font-mono text-right mt-0.5">
+                            ₱{item.pendingPhp.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                          </p>
+                        </div>
+                      )}
                     </div>
                   </div>
                 );
               })}
-            </div>
-
-            <div className="mt-4 pt-3 border-t border-black/5 dark:border-white/5 text-[10px] text-gray-400 leading-normal text-center italic">
-              "Keep logging your task budgets to top the standings! 🎉"
             </div>
           </div>
 
