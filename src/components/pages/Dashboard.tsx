@@ -783,11 +783,11 @@ export const Dashboard: React.FC<DashboardProps> = ({ onQuickAdd, onViewTask }) 
                         </p>
                       </div>
                     </div>
-                    <div className="text-right shrink-0 flex flex-col items-end gap-2">
+                    <div className="text-right shrink-0 flex flex-col items-end gap-1.5">
                       <div className="flex flex-col items-end">
                         <div className="flex items-center gap-2 justify-end">
-                          <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-600/80 dark:text-emerald-400/80">Completed:</span>
-                          <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 font-mono">
+                          <span className="text-[10px] font-extrabold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">Completed:</span>
+                          <span className="text-xs font-extrabold text-emerald-600 dark:text-emerald-400 font-mono">
                             ${item.totalUsd.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                           </span>
                         </div>
@@ -796,15 +796,15 @@ export const Dashboard: React.FC<DashboardProps> = ({ onQuickAdd, onViewTask }) 
                         </p>
                       </div>
                       {(item.pendingUsd > 0 || item.pendingPhp > 0) && (
-                        <div className="bg-amber-500/10 px-2.5 py-1.5 rounded-lg border border-amber-500/20 flex flex-col items-end">
+                        <div className="flex flex-col items-end">
                           <div className="flex items-center gap-2 justify-end">
                             <Clock className="w-3 h-3 text-amber-500 shrink-0" />
-                            <span className="text-[10px] font-bold uppercase tracking-wider text-amber-600/90 dark:text-amber-400/90">To Do:</span>
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400">To Do:</span>
                             <span className="text-xs font-bold text-amber-600 dark:text-amber-500 font-mono">
                               ${item.pendingUsd.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                             </span>
                           </div>
-                          <p className="text-xs font-bold text-amber-600/80 dark:text-amber-500/80 font-mono text-right mt-0.5">
+                          <p className="text-xs font-bold text-gray-500 dark:text-gray-400 font-mono text-right mt-0.5">
                             ₱{item.pendingPhp.toLocaleString(undefined, { maximumFractionDigits: 0 })}
                           </p>
                         </div>
