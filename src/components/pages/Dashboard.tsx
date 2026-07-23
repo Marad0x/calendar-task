@@ -783,11 +783,11 @@ export const Dashboard: React.FC<DashboardProps> = ({ onQuickAdd, onViewTask }) 
                         </p>
                       </div>
                     </div>
-                    <div className="text-right shrink-0 flex flex-col items-end gap-1.5">
+                    <div className="text-right shrink-0 flex flex-col items-end gap-1">
                       <div className="flex flex-col items-end">
                         <div className="flex items-center gap-2 justify-end">
-                          <span className="text-[10px] font-extrabold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">Completed:</span>
-                          <span className="text-xs font-extrabold text-emerald-600 dark:text-emerald-400 font-mono">
+                          <span className="text-[11px] font-black uppercase tracking-wider text-emerald-600 dark:text-emerald-400">Completed:</span>
+                          <span className="text-sm font-black text-emerald-600 dark:text-emerald-400 font-mono">
                             ${item.totalUsd.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                           </span>
                         </div>
@@ -796,7 +796,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onQuickAdd, onViewTask }) 
                         </p>
                       </div>
                       {(item.pendingUsd > 0 || item.pendingPhp > 0) && (
-                        <div className="flex flex-col items-end">
+                        <div className="flex flex-col items-end pt-2 mt-1 border-t border-black/10 dark:border-white/10 w-full">
                           <div className="flex items-center gap-2 justify-end">
                             <Clock className="w-3 h-3 text-amber-500 shrink-0" />
                             <span className="text-[10px] font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400">To Do:</span>
