@@ -48,7 +48,7 @@ interface AppContextType {
   archiveClient: (id: string, archive: boolean) => void;
 
   // Task Actions
-  createTask: (task: Omit<Task, 'id' | 'userId' | 'phpAmount' | 'createdAt'>) => void;
+  createTask: (task: Omit<Task, 'id' | 'userId' | 'phpAmount' | 'createdAt'> & { userId?: string }) => void;
   updateTask: (id: string, task: Partial<Task>) => void;
   deleteTask: (id: string) => void;
   duplicateTask: (id: string, date?: string) => void;
@@ -567,54 +567,95 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   // Task Actions
-  const createTask = (taskData: Omit<Task, 'id' | 'userId' | 'phpAmount' | 'createdAt'>) => {
+  const createTask = (taskData: Omit<Task, 'id' | 'userId' | 'phpAmount' | 'createdAt'> & { userId?: string }) => {
     if (!currentUser) return;
+    const targetUserId = taskData.userId || currentUser.id;
     const phpAmount = Number((taskData.usdRate * taskData.exchangeRate).toFixed(2));
     const newTask: Task = {
       ...taskData,
       id: 'task_' + Math.random().toString(36).substring(2, 9),
-      userId: currentUser.id,
+      userId: targetUserId,
       phpAmount,
       createdAt: new Date().toISOString()
     };
 
-    const updatedTasks = [newTask, ...tasks];
-    setTasks(updatedTasks);
-    localStorage.setItem(`freelancer_tasks_${currentUser.id}`, JSON.stringify(updatedTasks));
+    if (targetUserId === currentUser.id) {
+      const updatedTasks = [newTask, ...tasks];
+      setTasks(updatedTasks);
+    }
+    const targetStored = localStorage.getItem(`freelancer_tasks_${targetUserId}`);
+    let parsedTarget: Task[] = [];
+    if (targetStored) {
+      try { parsedTarget = JSON.parse(targetStored); } catch (e) {}
+    }
+    const newTargetTasks = [newTask, ...parsedTarget];
+    localStorage.setItem(`freelancer_tasks_${targetUserId}`, JSON.stringify(newTargetTasks));
 
     // Save to Firestore
     setDoc(doc(db, 'tasks', newTask.id), cleanObject(newTask)).catch((e) => {
       console.error('Failed to sync new task to Firestore', e);
     });
 
-    addToast(`Task "${newTask.title}" logged!`);
+    const targetUser = users.find(u => u.id === targetUserId);
+    const assignedName = targetUser ? targetUser.name : 'user';
+    addToast(`Task "${newTask.title}" logged for ${assignedName}!`);
   };
 
   const updateTask = (id: string, taskData: Partial<Task>) => {
     if (!currentUser) return;
     
-    let updatedTask: Task | null = null;
-    const updatedTasks = tasks.map((t) => {
-      if (t.id === id) {
-        const merged = { ...t, ...taskData };
-        // Recalculate phpAmount if usdRate or exchangeRate updated
-        if (taskData.usdRate !== undefined || taskData.exchangeRate !== undefined) {
-          merged.phpAmount = Number((merged.usdRate * merged.exchangeRate).toFixed(2));
-        }
-        updatedTask = merged;
-        return merged;
+    const existingTask = allTasks.find(t => t.id === id) || tasks.find(t => t.id === id);
+    if (!existingTask) return;
+
+    const oldUserId = existingTask.userId;
+    const newUserId = taskData.userId || oldUserId;
+
+    const merged: Task = {
+      ...existingTask,
+      ...taskData,
+      userId: newUserId
+    };
+
+    if (taskData.usdRate !== undefined || taskData.exchangeRate !== undefined) {
+      merged.phpAmount = Number((merged.usdRate * merged.exchangeRate).toFixed(2));
+    }
+
+    if (oldUserId === currentUser.id || newUserId === currentUser.id) {
+      if (newUserId === currentUser.id) {
+        setTasks(prev => {
+          const exists = prev.some(t => t.id === id);
+          if (exists) return prev.map(t => t.id === id ? merged : t);
+          return [merged, ...prev];
+        });
+      } else {
+        setTasks(prev => prev.filter(t => t.id !== id));
       }
-      return t;
-    });
-    setTasks(updatedTasks);
-    localStorage.setItem(`freelancer_tasks_${currentUser.id}`, JSON.stringify(updatedTasks));
+    }
+
+    const targetStored = localStorage.getItem(`freelancer_tasks_${newUserId}`);
+    let parsedTarget: Task[] = [];
+    if (targetStored) {
+      try { parsedTarget = JSON.parse(targetStored); } catch (e) {}
+    }
+    const newTargetTasks = parsedTarget.some(t => t.id === id)
+      ? parsedTarget.map(t => t.id === id ? merged : t)
+      : [merged, ...parsedTarget];
+    localStorage.setItem(`freelancer_tasks_${newUserId}`, JSON.stringify(newTargetTasks));
+
+    if (oldUserId !== newUserId) {
+      const oldStored = localStorage.getItem(`freelancer_tasks_${oldUserId}`);
+      if (oldStored) {
+        try {
+          const oldParsed: Task[] = JSON.parse(oldStored);
+          localStorage.setItem(`freelancer_tasks_${oldUserId}`, JSON.stringify(oldParsed.filter(t => t.id !== id)));
+        } catch (e) {}
+      }
+    }
 
     // Save to Firestore
-    if (updatedTask) {
-      setDoc(doc(db, 'tasks', id), cleanObject(updatedTask)).catch((e) => {
-        console.error('Failed to sync updated task to Firestore', e);
-      });
-    }
+    setDoc(doc(db, 'tasks', id), cleanObject(merged)).catch((e) => {
+      console.error('Failed to sync updated task to Firestore', e);
+    });
 
     addToast('Task updated successfully!');
   };

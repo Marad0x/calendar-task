@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../../context/AppContext';
 import { Task, Client, TaskStatus, TaskPriority, getLocalDateString } from '../../types';
-import { X, Plus, Image as ImageIcon, Link, Trash2, Calendar, Clock, DollarSign } from 'lucide-react';
+import { X, Plus, Image as ImageIcon, Link, Trash2, Calendar, Clock, DollarSign, User as UserIcon } from 'lucide-react';
 
 interface TaskModalProps {
   isOpen: boolean;
@@ -11,11 +11,12 @@ interface TaskModalProps {
 }
 
 export const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onClose, taskToEdit, defaultDate }) => {
-  const { clients, createTask, updateTask, deleteTask, createClient, currentUser, fetchLatestExchangeRate, liveRate } = useApp();
+  const { clients, createTask, updateTask, deleteTask, createClient, currentUser, users, fetchLatestExchangeRate, liveRate } = useApp();
 
   // Form Fields State
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
+  const [targetUserId, setTargetUserId] = useState<string>('');
   const [date, setDate] = useState('');
   const [clientId, setClientId] = useState('living-core');
   const [usdRate, setUsdRate] = useState('0');
@@ -44,6 +45,7 @@ export const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onClose, taskToEdi
     if (taskToEdit) {
       setTitle(taskToEdit.title);
       setDescription(taskToEdit.description);
+      setTargetUserId(taskToEdit.userId || currentUser?.id || '');
       setDate(taskToEdit.date);
       setClientId(taskToEdit.clientId);
       setUsdRate(taskToEdit.usdRate.toString());
@@ -66,6 +68,7 @@ export const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onClose, taskToEdi
       // Create Mode
       setTitle('');
       setDescription('');
+      setTargetUserId(currentUser?.id || '');
       setDate(defaultDate || getLocalDateString());
       setClientId('living-core');
       setImageCount('0');
@@ -156,7 +159,8 @@ export const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onClose, taskToEdi
       projectLink: projectLink.trim(),
       imageAttachment,
       imageCount: clientId === 'living-core' ? parseFloat(imageCount) || 0 : undefined,
-      ratePerImage: clientId === 'living-core' ? parseFloat(ratePerImage) || 0 : undefined
+      ratePerImage: clientId === 'living-core' ? parseFloat(ratePerImage) || 0 : undefined,
+      userId: targetUserId || currentUser?.id
     };
 
     if (taskToEdit) {
@@ -290,19 +294,39 @@ export const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onClose, taskToEdi
               />
             </div>
 
-            {/* Date selector */}
-            <div className="max-w-xs">
-              <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1 flex items-center gap-1">
-                <Calendar className="w-3 h-3 text-gray-400" /> Date
-              </label>
-              <input
-                id="task-date-input"
-                type="date"
-                required
-                value={date}
-                onChange={(e) => setDate(e.target.value)}
-                className="w-full px-3 py-2 text-xs rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-white focus:outline-none"
-              />
+            {/* Assignee & Date row */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1 flex items-center gap-1">
+                  <UserIcon className="w-3.5 h-3.5 text-purple-500" /> Assign To / Log For Profile
+                </label>
+                <select
+                  id="task-assignee-select"
+                  value={targetUserId}
+                  onChange={(e) => setTargetUserId(e.target.value)}
+                  className="w-full px-3 py-2 text-xs rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-white focus:outline-none font-semibold"
+                >
+                  {users.map((u) => (
+                    <option key={u.id} value={u.id}>
+                      {u.name} {u.id === currentUser?.id ? '(Active Profile / You)' : ''}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1 flex items-center gap-1">
+                  <Calendar className="w-3.5 h-3.5 text-gray-400" /> Date
+                </label>
+                <input
+                  id="task-date-input"
+                  type="date"
+                  required
+                  value={date}
+                  onChange={(e) => setDate(e.target.value)}
+                  className="w-full px-3 py-2 text-xs rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-white focus:outline-none font-medium"
+                />
+              </div>
             </div>
 
             {/* Client / Workspace dropdown + Quick Create client button */}
