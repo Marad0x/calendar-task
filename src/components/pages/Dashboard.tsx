@@ -753,32 +753,32 @@ export const Dashboard: React.FC<DashboardProps> = ({ onQuickAdd, onViewTask }) 
                   'bg-amber-600 text-amber-50',   // 3rd
                 ];
                 const rankBadge = idx < 3
-                  ? <span className={`w-5 h-5 rounded-full flex items-center justify-center font-bold text-[10px] ${rankColors[idx]}`}>{idx + 1}</span>
-                  : <span className="w-5 h-5 flex items-center justify-center font-semibold text-[10px] text-gray-400">{idx + 1}</span>;
+                  ? <span className={`w-6 h-6 rounded-full flex items-center justify-center font-bold text-xs shrink-0 ${rankColors[idx]}`}>{idx + 1}</span>
+                  : <span className="w-6 h-6 flex items-center justify-center font-semibold text-xs text-gray-400 shrink-0">{idx + 1}</span>;
 
                 return (
                   <div
                     key={item.id}
                     onClick={() => setSelectedProfileUserId(item.id)}
-                    className={`flex items-center justify-between p-2 rounded-xl transition-all cursor-pointer ${item.isCurrent
+                    className={`flex items-center justify-between p-2.5 sm:p-3 rounded-xl transition-all cursor-pointer ${item.isCurrent
                         ? 'bg-emerald-500/10 border border-emerald-500/20 dark:bg-emerald-500/5 hover:bg-emerald-500/15'
                         : 'hover:bg-gray-50/80 dark:hover:bg-gray-800/20 border border-transparent hover:border-gray-150 dark:hover:border-white/5 shadow-xs'
                       }`}
                     title={`Click to view ${item.name}'s statistics`}
                   >
-                    <div className="flex items-center gap-2.5 min-w-0">
+                    <div className="flex items-center gap-3 min-w-0">
                       {rankBadge}
                       <img
                         src={item.avatar}
                         alt={item.name}
-                        className="w-7 h-7 rounded-lg bg-gray-100 dark:bg-gray-800 shrink-0 object-cover border border-gray-200 dark:border-white/5"
+                        className="w-9 h-9 rounded-xl bg-gray-100 dark:bg-gray-800 shrink-0 object-cover border border-gray-200 dark:border-white/5"
                         referrerPolicy="no-referrer"
                       />
                       <div className="min-w-0">
-                        <p className={`text-xs font-bold truncate ${item.isCurrent ? 'text-emerald-600 dark:text-emerald-400 font-extrabold' : 'text-gray-900 dark:text-white'}`}>
+                        <p className={`text-sm font-bold truncate ${item.isCurrent ? 'text-emerald-600 dark:text-emerald-400 font-extrabold' : 'text-gray-900 dark:text-white'}`}>
                           {item.name} {item.isCurrent && '👤'}
                         </p>
-                        <p className="text-[9px] text-gray-400 truncate">
+                        <p className="text-[10px] text-gray-400 truncate mt-0.5">
                           {item.isCurrent ? 'Active Profile' : 'Freelancer Profile'}
                         </p>
                       </div>
