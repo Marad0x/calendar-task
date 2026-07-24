@@ -349,11 +349,6 @@ export const Dashboard: React.FC<DashboardProps> = ({ onQuickAdd, onViewTask }) 
     const completedTasksList = localAllTasks.filter(t => t.status === 'Completed').sort(sortTasksDesc);
     const pendingTasksList = localAllTasks.filter(t => t.status !== 'Completed').sort(sortTasksDesc);
 
-    // Balanced mix for "All" tab: top 4 latest pending/logged + top 4 recent completed
-    const topPendingForMix = pendingTasksList.slice(0, 4);
-    const topCompletedForMix = completedTasksList.slice(0, 4);
-    const balancedRecent = [...topPendingForMix, ...topCompletedForMix].sort(sortTasksDesc);
-
     return {
       todayUsd,
       todayPhp,
@@ -366,9 +361,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ onQuickAdd, onViewTask }) 
       streak,
       topClient,
       completedThisWeekCount: completedThisWeek.length,
-      recentTasks: balancedRecent.length > 0 ? balancedRecent : localAllTasks.slice(0, 8),
-      recentCompletedTasks: completedTasksList.slice(0, 8),
-      recentPendingTasks: pendingTasksList.slice(0, 8),
+      recentTasks: localAllTasks,
+      recentCompletedTasks: completedTasksList,
+      recentPendingTasks: pendingTasksList,
       upcomingTasks: allPending.slice(0, 5)
     };
   }, [tasks, clients, users, currentUser, allTasks]);
@@ -382,8 +377,24 @@ export const Dashboard: React.FC<DashboardProps> = ({ onQuickAdd, onViewTask }) 
 
   // Slice to 4 items initially unless expanded
   const visibleRecentTasks = useMemo(() => {
-    return isRecentExpanded ? displayedRecentTasks : displayedRecentTasks.slice(0, 4);
-  }, [displayedRecentTasks, isRecentExpanded]);
+    if (isRecentExpanded) {
+      return displayedRecentTasks;
+    }
+
+    if (recentTasksTab === 'all') {
+      const pendingInDisplayed = displayedRecentTasks.filter(t => t.status !== 'Completed');
+      const completedInDisplayed = displayedRecentTasks.filter(t => t.status === 'Completed');
+
+      if (pendingInDisplayed.length > 0 && completedInDisplayed.length > 0) {
+        // In collapsed All view, show top 2 pending (Today TO DOs) AND top 2 completed tasks
+        const previewPending = pendingInDisplayed.slice(0, 2);
+        const previewCompleted = completedInDisplayed.slice(0, 2);
+        return [...previewPending, ...previewCompleted];
+      }
+    }
+
+    return displayedRecentTasks.slice(0, 4);
+  }, [displayedRecentTasks, isRecentExpanded, recentTasksTab]);
 
   const [activityDate, setActivityDate] = useState(() => new Date());
 
