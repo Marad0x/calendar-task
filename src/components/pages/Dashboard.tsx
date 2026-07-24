@@ -30,6 +30,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ onQuickAdd, onViewTask }) 
   // Selected profile user for stats view
   const [selectedProfileUserId, setSelectedProfileUserId] = useState<string | null>(null);
 
+  // Recent tasks tab selection ('all' | 'completed' | 'pending')
+  const [recentTasksTab, setRecentTasksTab] = useState<'all' | 'completed' | 'pending'>('all');
+
   // Compute profile statistics dynamically when requested
   const selectedProfileDetails = useMemo(() => {
     if (!selectedProfileUserId) return null;
@@ -282,8 +285,24 @@ export const Dashboard: React.FC<DashboardProps> = ({ onQuickAdd, onViewTask }) 
         allPending.push({ ...t, userName: u.name });
       });
     });
+
+    const sortTasksDesc = (a: any, b: any) => {
+      if (a.date !== b.date) {
+        return b.date.localeCompare(a.date);
+      }
+      return (b.createdAt || '').localeCompare(a.createdAt || '');
+    };
+
+    localAllTasks.sort(sortTasksDesc);
     allPending.sort((a, b) => a.date.localeCompare(b.date));
-    localAllTasks.sort((a, b) => b.date.localeCompare(a.date));
+
+    const completedTasksList = localAllTasks.filter(t => t.status === 'Completed').sort(sortTasksDesc);
+    const pendingTasksList = localAllTasks.filter(t => t.status !== 'Completed').sort(sortTasksDesc);
+
+    // Balanced mix for "All" tab: top 4 latest pending/logged + top 4 recent completed
+    const topPendingForMix = pendingTasksList.slice(0, 4);
+    const topCompletedForMix = completedTasksList.slice(0, 4);
+    const balancedRecent = [...topPendingForMix, ...topCompletedForMix].sort(sortTasksDesc);
 
     return {
       todayUsd,
@@ -297,10 +316,19 @@ export const Dashboard: React.FC<DashboardProps> = ({ onQuickAdd, onViewTask }) 
       streak,
       topClient,
       completedThisWeekCount: completedThisWeek.length,
-      recentTasks: localAllTasks.slice(0, 5),
+      recentTasks: balancedRecent.length > 0 ? balancedRecent : localAllTasks.slice(0, 8),
+      recentCompletedTasks: completedTasksList.slice(0, 8),
+      recentPendingTasks: pendingTasksList.slice(0, 8),
       upcomingTasks: allPending.slice(0, 5)
     };
   }, [tasks, clients, users, currentUser, allTasks]);
+
+  // Filter tasks to display in the Recent Tasks widget based on active tab
+  const displayedRecentTasks = useMemo(() => {
+    if (recentTasksTab === 'completed') return stats.recentCompletedTasks;
+    if (recentTasksTab === 'pending') return stats.recentPendingTasks;
+    return stats.recentTasks;
+  }, [recentTasksTab, stats]);
 
   const [activityDate, setActivityDate] = useState(() => new Date());
 
@@ -448,32 +476,78 @@ export const Dashboard: React.FC<DashboardProps> = ({ onQuickAdd, onViewTask }) 
         <div className="lg:col-span-2 space-y-6">
           {/* Recent Tasks Widget */}
           <div className="glass-card rounded-2xl shadow-sm p-6">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="font-bold text-gray-900 dark:text-white text-sm tracking-tight flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4 text-emerald-500" /> Recent Tasks
-              </h3>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+              <div className="flex flex-wrap items-center gap-3">
+                <h3 className="font-bold text-gray-900 dark:text-white text-sm tracking-tight flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-500" /> Recent Tasks
+                </h3>
+
+                {/* Filter Pills */}
+                <div className="flex items-center gap-1 bg-gray-100 dark:bg-gray-800/70 p-1 rounded-xl border border-gray-200/50 dark:border-white/5">
+                  <button
+                    id="recent-tab-all"
+                    onClick={() => setRecentTasksTab('all')}
+                    className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer ${
+                      recentTasksTab === 'all'
+                        ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-xs'
+                        : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+                    }`}
+                  >
+                    All ({stats.recentTasks.length})
+                  </button>
+                  <button
+                    id="recent-tab-completed"
+                    onClick={() => setRecentTasksTab('completed')}
+                    className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer flex items-center gap-1 ${
+                      recentTasksTab === 'completed'
+                        ? 'bg-emerald-500 text-white shadow-xs'
+                        : 'text-gray-500 dark:text-gray-400 hover:text-emerald-500 dark:hover:text-emerald-400'
+                    }`}
+                  >
+                    Completed ({stats.recentCompletedTasks.length})
+                  </button>
+                  <button
+                    id="recent-tab-pending"
+                    onClick={() => setRecentTasksTab('pending')}
+                    className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer flex items-center gap-1 ${
+                      recentTasksTab === 'pending'
+                        ? 'bg-amber-500 text-white shadow-xs'
+                        : 'text-gray-500 dark:text-gray-400 hover:text-amber-500 dark:hover:text-amber-400'
+                    }`}
+                  >
+                    TO DO ({stats.recentPendingTasks.length})
+                  </button>
+                </div>
+              </div>
+
               <button
                 id="dash-add-task-btn"
                 onClick={() => onQuickAdd()}
-                className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/20 px-2.5 py-1.5 rounded-lg transition-colors border border-emerald-500/10"
+                className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/20 px-2.5 py-1.5 rounded-lg transition-colors border border-emerald-500/10 shrink-0 self-start sm:self-auto"
               >
                 <Plus className="w-3.5 h-3.5" /> Log Task
               </button>
             </div>
 
-            {stats.recentTasks.length === 0 ? (
+            {displayedRecentTasks.length === 0 ? (
               <div className="text-center py-10 border border-dashed border-gray-100 dark:border-gray-800 rounded-xl">
-                <p className="text-sm text-gray-400">No tasks logged recently.</p>
+                <p className="text-sm text-gray-400">
+                  {recentTasksTab === 'completed'
+                    ? 'No completed tasks found.'
+                    : recentTasksTab === 'pending'
+                      ? 'No pending/TO DO tasks found.'
+                      : 'No tasks logged recently.'}
+                </p>
                 <button
                   onClick={() => onQuickAdd()}
                   className="mt-2 text-xs font-semibold text-emerald-500 hover:underline"
                 >
-                  Log your first task
+                  Log a new task
                 </button>
               </div>
             ) : (
               <div className="divide-y divide-gray-50 dark:divide-gray-800/60">
-                {stats.recentTasks.map((task) => {
+                {displayedRecentTasks.map((task) => {
                   const client = clients.find(c => c.id === task.clientId);
                   return (
                     <div
