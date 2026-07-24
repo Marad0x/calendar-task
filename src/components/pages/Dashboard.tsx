@@ -634,17 +634,36 @@ export const Dashboard: React.FC<DashboardProps> = ({ onQuickAdd, onViewTask }) 
                           </div>
 
                           <div className="min-w-0">
-                            {/* Title line */}
-                            <p className="text-sm font-semibold text-gray-900 dark:text-white truncate group-hover:text-emerald-500 transition-colors">
-                              {task.title}
-                            </p>
+                            {/* Title line with Status tag */}
+                            <div className="flex items-center gap-2 min-w-0 flex-wrap sm:flex-nowrap">
+                              <p className="text-sm font-semibold text-gray-900 dark:text-white truncate group-hover:text-emerald-500 transition-colors">
+                                {task.title}
+                              </p>
+
+                              {/* Status Tag next to title */}
+                              <span
+                                className="text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded tracking-wider shrink-0"
+                                style={{
+                                  backgroundColor: task.status === 'Completed' ? 'rgba(16, 185, 129, 0.12)' :
+                                    task.status === 'Pending' ? 'rgba(245, 158, 11, 0.12)' :
+                                      task.status === 'Revision' ? 'rgba(59, 130, 246, 0.12)' :
+                                        'rgba(244, 63, 94, 0.12)',
+                                  color: task.status === 'Completed' ? '#10b981' :
+                                    task.status === 'Pending' ? '#f59e0b' :
+                                      task.status === 'Revision' ? '#3b82f6' :
+                                        '#f43f5e'
+                                }}
+                              >
+                                {task.status === 'Pending' ? 'TO DO' : task.status}
+                              </span>
+                            </div>
 
                             {/* Clean Sub-Metadata line */}
                             <div className="flex items-center flex-wrap gap-x-2 gap-y-1 text-xs text-gray-400 mt-0.5 font-medium">
-                              {/* Client Badge */}
-                              {client && (
+                              {/* Client Badge (only for custom clients, excluding Living Core) */}
+                              {client && client.id !== 'living-core' && (
                                 <span
-                                  className="font-bold text-[10px] px-1.5 py-0.2 rounded"
+                                  className="font-bold text-[10px] px-1.5 py-0.2 rounded shrink-0"
                                   style={{
                                     backgroundColor: `${client.color || '#64748b'}18`,
                                     color: client.color || '#94a3b8'
@@ -660,23 +679,6 @@ export const Dashboard: React.FC<DashboardProps> = ({ onQuickAdd, onViewTask }) 
                                   {task.userName}
                                 </span>
                               )}
-
-                              {/* Status Tag */}
-                              <span
-                                className="text-[9px] font-extrabold uppercase px-1.5 py-0.2 rounded tracking-wider shrink-0"
-                                style={{
-                                  backgroundColor: task.status === 'Completed' ? 'rgba(16, 185, 129, 0.12)' :
-                                    task.status === 'Pending' ? 'rgba(245, 158, 11, 0.12)' :
-                                      task.status === 'Revision' ? 'rgba(59, 130, 246, 0.12)' :
-                                        'rgba(244, 63, 94, 0.12)',
-                                  color: task.status === 'Completed' ? '#10b981' :
-                                    task.status === 'Pending' ? '#f59e0b' :
-                                      task.status === 'Revision' ? '#3b82f6' :
-                                        '#f43f5e'
-                                }}
-                              >
-                                {task.status === 'Pending' ? 'TO DO' : task.status}
-                              </span>
 
                               <span className="text-gray-300 dark:text-gray-700">•</span>
 
