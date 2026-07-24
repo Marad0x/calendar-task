@@ -15,9 +15,46 @@ import {
   XCircle,
   ChevronLeft,
   ChevronRight,
+  ChevronDown,
+  ChevronUp,
   X
 } from 'lucide-react';
 import { Task, Client, getLocalDateString } from '../../types';
+
+// Helper to compute human-friendly relative date labels (e.g. "Today", "Yesterday", "2d ago", "In 2d")
+const getRelativeDateLabel = (dateStr: string): string => {
+  if (!dateStr) return '';
+  const [year, month, day] = dateStr.split('-').map(Number);
+  const taskDate = new Date(year, month - 1, day);
+
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+  const diffTime = taskDate.getTime() - today.getTime();
+  const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+
+  if (diffDays === 0) return 'Today';
+  if (diffDays === 1) return 'Tomorrow';
+  if (diffDays === -1) return 'Yesterday';
+  if (diffDays > 1) return `In ${diffDays}d`;
+
+  const pastDays = Math.abs(diffDays);
+  return `${pastDays}d ago`;
+};
+
+const getRelativeBadgeStyle = (dateStr: string) => {
+  const label = getRelativeDateLabel(dateStr);
+  if (label === 'Today') {
+    return 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/20';
+  }
+  if (label === 'Yesterday') {
+    return 'bg-blue-500/15 text-blue-600 dark:text-blue-400 border-blue-500/20';
+  }
+  if (label === 'Tomorrow' || label.startsWith('In ')) {
+    return 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/20';
+  }
+  return 'bg-gray-100 dark:bg-white/10 text-gray-600 dark:text-gray-300 border-transparent';
+};
 
 interface DashboardProps {
   onQuickAdd: (dateString?: string) => void;
@@ -32,6 +69,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ onQuickAdd, onViewTask }) 
 
   // Recent tasks tab selection ('all' | 'completed' | 'pending')
   const [recentTasksTab, setRecentTasksTab] = useState<'all' | 'completed' | 'pending'>('all');
+
+  // Toggle show initial 4 vs expand all in Recent Tasks
+  const [isRecentExpanded, setIsRecentExpanded] = useState(false);
 
   // Compute profile statistics dynamically when requested
   const selectedProfileDetails = useMemo(() => {
@@ -330,6 +370,11 @@ export const Dashboard: React.FC<DashboardProps> = ({ onQuickAdd, onViewTask }) 
     return stats.recentTasks;
   }, [recentTasksTab, stats]);
 
+  // Slice to 4 items initially unless expanded
+  const visibleRecentTasks = useMemo(() => {
+    return isRecentExpanded ? displayedRecentTasks : displayedRecentTasks.slice(0, 4);
+  }, [displayedRecentTasks, isRecentExpanded]);
+
   const [activityDate, setActivityDate] = useState(() => new Date());
 
   // Month-by-month calendar heatmap contribution data
@@ -546,110 +591,140 @@ export const Dashboard: React.FC<DashboardProps> = ({ onQuickAdd, onViewTask }) 
                 </button>
               </div>
             ) : (
-              <div className="divide-y divide-gray-50 dark:divide-gray-800/60">
-                {displayedRecentTasks.map((task) => {
-                  const client = clients.find(c => c.id === task.clientId);
-                  return (
-                    <div
-                      key={task.id}
-                      id={`dash-task-${task.id}`}
-                      onClick={() => onViewTask(task)}
-                      className="flex items-center justify-between py-3.5 first:pt-0 last:pb-0 hover:bg-gray-50/50 dark:hover:bg-gray-800/10 px-2 -mx-2 rounded-xl transition-all cursor-pointer group"
-                    >
-                      <div className="flex items-center gap-3 min-w-0">
-                        <div
-                          className="w-3 h-3 rounded-full shrink-0"
-                          style={{
-                            backgroundColor: task.status === 'Completed' ? '#10b981' :
-                              task.status === 'Pending' ? '#f59e0b' :
-                                task.status === 'Revision' ? '#3b82f6' :
-                                  '#f43f5e'
-                          }}
-                        />
-                        <div className="min-w-0">
-                          <p className="text-sm font-semibold text-gray-900 dark:text-white truncate group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
-                            {task.title}
-                          </p>
-                          <div className="flex items-center flex-wrap gap-x-2 gap-y-1 text-[11px] text-gray-400 mt-1">
-                            {task.userName && (
-                              <>
-                                <span className="font-semibold text-amber-500/80">{task.userName}</span>
-                                <span>•</span>
-                              </>
-                            )}
-                            
-                            <div className="inline-flex items-center gap-1 shrink-0" title={task.status}>
-                              <div className="p-0.5 rounded-md border transition-all flex items-center justify-center shrink-0"
-                                style={{
-                                  backgroundColor: task.status === 'Completed' ? 'rgba(16, 185, 129, 0.08)' :
-                                    task.status === 'Pending' ? 'rgba(245, 158, 11, 0.08)' :
-                                      task.status === 'Revision' ? 'rgba(59, 130, 246, 0.08)' :
-                                        'rgba(244, 63, 94, 0.08)',
-                                  borderColor: task.status === 'Completed' ? 'rgba(16, 185, 129, 0.2)' :
-                                    task.status === 'Pending' ? 'rgba(245, 158, 11, 0.2)' :
-                                      task.status === 'Revision' ? 'rgba(59, 130, 246, 0.2)' :
-                                        'rgba(244, 63, 94, 0.2)',
-                                  color: task.status === 'Completed' ? '#10b981' :
-                                    task.status === 'Pending' ? '#f59e0b' :
-                                      task.status === 'Revision' ? '#3b82f6' :
-                                        '#f43f5e'
-                                }}
-                              >
-                                {task.status === 'Completed' && <CheckCircle2 className="w-2.5 h-2.5" />}
-                                {task.status === 'Pending' && <Clock className="w-2.5 h-2.5" />}
-                                {task.status === 'Revision' && <AlertCircle className="w-2.5 h-2.5" />}
-                                {task.status === 'Cancelled' && <XCircle className="w-2.5 h-2.5" />}
-                              </div>
-                              <span className="text-[9px] font-bold tracking-wide uppercase"
-                                style={{
-                                  color: task.status === 'Completed' ? '#10b981' :
-                                    task.status === 'Pending' ? '#f59e0b' :
-                                      task.status === 'Revision' ? '#3b82f6' :
-                                        '#f43f5e'
-                                }}
-                              >
-                                {task.status === 'Pending' ? 'TO DO' : task.status}
-                              </span>
-                            </div>
-
-                            <span className="hidden sm:inline text-gray-500">•</span>
-                            <span className="hidden sm:inline font-mono">
-                              {(() => {
-                                if (!task.date) return '';
-                                const [y, m, d] = task.date.split('-');
-                                return `${m}/${d}/${y}`;
-                              })()}
-                            </span>
-
-                            {task.projectLink && (
-                              <>
-                                <span className="hidden sm:inline text-gray-500">•</span>
-                                <span className="hidden sm:inline-flex shrink-0 items-center gap-1 bg-emerald-500/5 px-1.5 py-0.5 rounded text-[10px] text-emerald-500">
-                                  <Link className="w-2.5 h-2.5" /> Google Drive / Link
+              <>
+                <div className="divide-y divide-gray-50 dark:divide-gray-800/60">
+                  {visibleRecentTasks.map((task) => {
+                    const client = clients.find(c => c.id === task.clientId);
+                    return (
+                      <div
+                        key={task.id}
+                        id={`dash-task-${task.id}`}
+                        onClick={() => onViewTask(task)}
+                        className="flex items-center justify-between py-3.5 first:pt-0 last:pb-0 hover:bg-gray-50/50 dark:hover:bg-gray-800/10 px-2 -mx-2 rounded-xl transition-all cursor-pointer group"
+                      >
+                        <div className="flex items-center gap-3 min-w-0">
+                          <div
+                            className="w-3 h-3 rounded-full shrink-0"
+                            style={{
+                              backgroundColor: task.status === 'Completed' ? '#10b981' :
+                                task.status === 'Pending' ? '#f59e0b' :
+                                  task.status === 'Revision' ? '#3b82f6' :
+                                    '#f43f5e'
+                            }}
+                          />
+                          <div className="min-w-0">
+                            <p className="text-sm font-semibold text-gray-900 dark:text-white truncate group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
+                              {task.title}
+                            </p>
+                            <div className="flex items-center flex-wrap gap-x-2 gap-y-1 text-[11px] text-gray-400 mt-1">
+                              {task.userName && (
+                                <>
+                                  <span className="font-semibold text-amber-500/80">{task.userName}</span>
+                                  <span>•</span>
+                                </>
+                              )}
+                              
+                              <div className="inline-flex items-center gap-1 shrink-0" title={task.status}>
+                                <div className="p-0.5 rounded-md border transition-all flex items-center justify-center shrink-0"
+                                  style={{
+                                    backgroundColor: task.status === 'Completed' ? 'rgba(16, 185, 129, 0.08)' :
+                                      task.status === 'Pending' ? 'rgba(245, 158, 11, 0.08)' :
+                                        task.status === 'Revision' ? 'rgba(59, 130, 246, 0.08)' :
+                                          'rgba(244, 63, 94, 0.08)',
+                                    borderColor: task.status === 'Completed' ? 'rgba(16, 185, 129, 0.2)' :
+                                      task.status === 'Pending' ? 'rgba(245, 158, 11, 0.2)' :
+                                        task.status === 'Revision' ? 'rgba(59, 130, 246, 0.2)' :
+                                          'rgba(244, 63, 94, 0.2)',
+                                    color: task.status === 'Completed' ? '#10b981' :
+                                      task.status === 'Pending' ? '#f59e0b' :
+                                        task.status === 'Revision' ? '#3b82f6' :
+                                          '#f43f5e'
+                                  }}
+                                >
+                                  {task.status === 'Completed' && <CheckCircle2 className="w-2.5 h-2.5" />}
+                                  {task.status === 'Pending' && <Clock className="w-2.5 h-2.5" />}
+                                  {task.status === 'Revision' && <AlertCircle className="w-2.5 h-2.5" />}
+                                  {task.status === 'Cancelled' && <XCircle className="w-2.5 h-2.5" />}
+                                </div>
+                                <span className="text-[9px] font-bold tracking-wide uppercase"
+                                  style={{
+                                    color: task.status === 'Completed' ? '#10b981' :
+                                      task.status === 'Pending' ? '#f59e0b' :
+                                        task.status === 'Revision' ? '#3b82f6' :
+                                          '#f43f5e'
+                                  }}
+                                >
+                                  {task.status === 'Pending' ? 'TO DO' : task.status}
                                 </span>
-                              </>
-                            )}
+                              </div>
+
+                              <span className="hidden sm:inline text-gray-500">•</span>
+                              <div className="hidden sm:inline-flex items-center gap-1.5 font-mono">
+                                <span>
+                                  {(() => {
+                                    if (!task.date) return '';
+                                    const [y, m, d] = task.date.split('-');
+                                    return `${m}/${d}/${y}`;
+                                  })()}
+                                </span>
+                                {task.date && (
+                                  <span className={`text-[10px] font-sans font-bold px-1.5 py-0.5 rounded-md border ${getRelativeBadgeStyle(task.date)}`}>
+                                    {getRelativeDateLabel(task.date)}
+                                  </span>
+                                )}
+                              </div>
+
+                              {task.projectLink && (
+                                <>
+                                  <span className="hidden sm:inline text-gray-500">•</span>
+                                  <span className="hidden sm:inline-flex shrink-0 items-center gap-1 bg-emerald-500/5 px-1.5 py-0.5 rounded text-[10px] text-emerald-500">
+                                    <Link className="w-2.5 h-2.5" /> Google Drive / Link
+                                  </span>
+                                </>
+                              )}
+                            </div>
                           </div>
                         </div>
-                      </div>
 
-                      <div className="text-right shrink-0">
-                        <p className="text-sm font-bold text-gray-900 dark:text-white">
-                          ${task.usdRate.toFixed(2)}
-                        </p>
-                        {task.clientId === 'living-core' && task.imageCount !== undefined && task.imageCount > 0 && (
-                          <p className="text-[9px] text-emerald-500 font-bold leading-none mt-0.5">
-                            {task.imageCount} imgs @ ${task.ratePerImage || 1.5}
+                        <div className="text-right shrink-0">
+                          <p className="text-sm font-bold text-gray-900 dark:text-white">
+                            ${task.usdRate.toFixed(2)}
                           </p>
-                        )}
-                        <p className="text-[10px] text-gray-400 mt-0.5">
-                          ₱{task.phpAmount.toLocaleString()}
-                        </p>
+                          {task.clientId === 'living-core' && task.imageCount !== undefined && task.imageCount > 0 && (
+                            <p className="text-[9px] text-emerald-500 font-bold leading-none mt-0.5">
+                              {task.imageCount} imgs @ ${task.ratePerImage || 1.5}
+                            </p>
+                          )}
+                          <p className="text-[10px] text-gray-400 mt-0.5">
+                            ₱{task.phpAmount.toLocaleString()}
+                          </p>
+                        </div>
                       </div>
-                    </div>
-                  );
-                })}
-              </div>
+                    );
+                  })}
+                </div>
+
+                {/* Show More / Show Less Button */}
+                {displayedRecentTasks.length > 4 && (
+                  <div className="pt-3.5 mt-2 border-t border-gray-100 dark:border-gray-800/60 flex justify-center">
+                    <button
+                      id="toggle-recent-tasks-btn"
+                      onClick={() => setIsRecentExpanded(prev => !prev)}
+                      className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 px-3.5 py-1.5 rounded-xl border border-emerald-500/20 transition-all cursor-pointer shadow-xs active:scale-95"
+                    >
+                      {isRecentExpanded ? (
+                        <>
+                          Show Less <ChevronUp className="w-3.5 h-3.5" />
+                        </>
+                      ) : (
+                        <>
+                          Show More ({displayedRecentTasks.length - 4} remaining) <ChevronDown className="w-3.5 h-3.5" />
+                        </>
+                      )}
+                    </button>
+                  </div>
+                )}
+              </>
             )}
           </div>
 
