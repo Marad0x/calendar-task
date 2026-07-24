@@ -45,15 +45,15 @@ const getRelativeDateLabel = (dateStr: string): string => {
 const getRelativeBadgeStyle = (dateStr: string) => {
   const label = getRelativeDateLabel(dateStr);
   if (label === 'Today') {
-    return 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/20';
+    return 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 font-bold border border-emerald-500/20';
   }
   if (label === 'Yesterday') {
-    return 'bg-blue-500/15 text-blue-600 dark:text-blue-400 border-blue-500/20';
+    return 'bg-blue-500/15 text-blue-600 dark:text-blue-400 font-bold border border-blue-500/20';
   }
   if (label === 'Tomorrow' || label.startsWith('In ')) {
-    return 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/20';
+    return 'bg-amber-500/15 text-amber-600 dark:text-amber-400 font-bold border border-amber-500/20';
   }
-  return 'bg-gray-100 dark:bg-white/10 text-gray-600 dark:text-gray-300 border-transparent';
+  return 'text-gray-400 dark:text-gray-500 font-medium';
 };
 
 interface DashboardProps {
@@ -327,9 +327,19 @@ export const Dashboard: React.FC<DashboardProps> = ({ onQuickAdd, onViewTask }) 
     });
 
     const sortTasksDesc = (a: any, b: any) => {
+      const aIsTodayPending = a.date === todayStr && a.status !== 'Completed';
+      const bIsTodayPending = b.date === todayStr && b.status !== 'Completed';
+
+      // 1. Today's TO DO tasks always pinned to top!
+      if (aIsTodayPending && !bIsTodayPending) return -1;
+      if (!aIsTodayPending && bIsTodayPending) return 1;
+
+      // 2. Otherwise sort by date descending
       if (a.date !== b.date) {
         return b.date.localeCompare(a.date);
       }
+
+      // 3. Then by createdAt descending
       return (b.createdAt || '').localeCompare(a.createdAt || '');
     };
 
@@ -600,67 +610,79 @@ export const Dashboard: React.FC<DashboardProps> = ({ onQuickAdd, onViewTask }) 
                         key={task.id}
                         id={`dash-task-${task.id}`}
                         onClick={() => onViewTask(task)}
-                        className="flex items-center justify-between py-3.5 first:pt-0 last:pb-0 hover:bg-gray-50/50 dark:hover:bg-gray-800/10 px-2 -mx-2 rounded-xl transition-all cursor-pointer group"
+                        className="flex items-center justify-between py-3 px-3 rounded-xl transition-all cursor-pointer group hover:bg-gray-50/80 dark:hover:bg-white/[0.04] border border-transparent hover:border-gray-100 dark:hover:border-white/5 my-0.5"
                       >
                         <div className="flex items-center gap-3 min-w-0">
+                          {/* Clean Status Icon Badge */}
                           <div
-                            className="w-3 h-3 rounded-full shrink-0"
+                            className="w-8 h-8 rounded-xl shrink-0 flex items-center justify-center transition-transform group-hover:scale-105"
                             style={{
-                              backgroundColor: task.status === 'Completed' ? '#10b981' :
+                              backgroundColor: task.status === 'Completed' ? 'rgba(16, 185, 129, 0.12)' :
+                                task.status === 'Pending' ? 'rgba(245, 158, 11, 0.12)' :
+                                  task.status === 'Revision' ? 'rgba(59, 130, 246, 0.12)' :
+                                    'rgba(244, 63, 94, 0.12)',
+                              color: task.status === 'Completed' ? '#10b981' :
                                 task.status === 'Pending' ? '#f59e0b' :
                                   task.status === 'Revision' ? '#3b82f6' :
                                     '#f43f5e'
                             }}
-                          />
+                          >
+                            {task.status === 'Completed' && <CheckCircle2 className="w-4 h-4" />}
+                            {task.status === 'Pending' && <Clock className="w-4 h-4" />}
+                            {task.status === 'Revision' && <AlertCircle className="w-4 h-4" />}
+                            {task.status === 'Cancelled' && <XCircle className="w-4 h-4" />}
+                          </div>
+
                           <div className="min-w-0">
-                            <p className="text-sm font-semibold text-gray-900 dark:text-white truncate group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
+                            {/* Title line */}
+                            <p className="text-sm font-semibold text-gray-900 dark:text-white truncate group-hover:text-emerald-500 transition-colors">
                               {task.title}
                             </p>
-                            <div className="flex items-center flex-wrap gap-x-2 gap-y-1 text-[11px] text-gray-400 mt-1">
-                              {task.userName && (
-                                <>
-                                  <span className="font-semibold text-amber-500/80">{task.userName}</span>
-                                  <span>•</span>
-                                </>
-                              )}
-                              
-                              <div className="inline-flex items-center gap-1 shrink-0" title={task.status}>
-                                <div className="p-0.5 rounded-md border transition-all flex items-center justify-center shrink-0"
-                                  style={{
-                                    backgroundColor: task.status === 'Completed' ? 'rgba(16, 185, 129, 0.08)' :
-                                      task.status === 'Pending' ? 'rgba(245, 158, 11, 0.08)' :
-                                        task.status === 'Revision' ? 'rgba(59, 130, 246, 0.08)' :
-                                          'rgba(244, 63, 94, 0.08)',
-                                    borderColor: task.status === 'Completed' ? 'rgba(16, 185, 129, 0.2)' :
-                                      task.status === 'Pending' ? 'rgba(245, 158, 11, 0.2)' :
-                                        task.status === 'Revision' ? 'rgba(59, 130, 246, 0.2)' :
-                                          'rgba(244, 63, 94, 0.2)',
-                                    color: task.status === 'Completed' ? '#10b981' :
-                                      task.status === 'Pending' ? '#f59e0b' :
-                                        task.status === 'Revision' ? '#3b82f6' :
-                                          '#f43f5e'
-                                  }}
-                                >
-                                  {task.status === 'Completed' && <CheckCircle2 className="w-2.5 h-2.5" />}
-                                  {task.status === 'Pending' && <Clock className="w-2.5 h-2.5" />}
-                                  {task.status === 'Revision' && <AlertCircle className="w-2.5 h-2.5" />}
-                                  {task.status === 'Cancelled' && <XCircle className="w-2.5 h-2.5" />}
-                                </div>
-                                <span className="text-[9px] font-bold tracking-wide uppercase"
-                                  style={{
-                                    color: task.status === 'Completed' ? '#10b981' :
-                                      task.status === 'Pending' ? '#f59e0b' :
-                                        task.status === 'Revision' ? '#3b82f6' :
-                                          '#f43f5e'
-                                  }}
-                                >
-                                  {task.status === 'Pending' ? 'TO DO' : task.status}
-                                </span>
-                              </div>
 
-                              <span className="hidden sm:inline text-gray-500">•</span>
-                              <div className="hidden sm:inline-flex items-center gap-1.5 font-mono">
-                                <span>
+                            {/* Clean Sub-Metadata line */}
+                            <div className="flex items-center flex-wrap gap-x-2 gap-y-1 text-xs text-gray-400 mt-0.5 font-medium">
+                              {/* Client Badge */}
+                              {client && (
+                                <span
+                                  className="font-bold text-[10px] px-1.5 py-0.2 rounded"
+                                  style={{
+                                    backgroundColor: `${client.color || '#64748b'}18`,
+                                    color: client.color || '#94a3b8'
+                                  }}
+                                >
+                                  {client.name}
+                                </span>
+                              )}
+
+                              {/* User Name */}
+                              {task.userName && (
+                                <span className="font-semibold text-amber-500/90 dark:text-amber-400/90 text-[11px]">
+                                  {task.userName}
+                                </span>
+                              )}
+
+                              {/* Status Tag */}
+                              <span
+                                className="text-[9px] font-extrabold uppercase px-1.5 py-0.2 rounded tracking-wider shrink-0"
+                                style={{
+                                  backgroundColor: task.status === 'Completed' ? 'rgba(16, 185, 129, 0.12)' :
+                                    task.status === 'Pending' ? 'rgba(245, 158, 11, 0.12)' :
+                                      task.status === 'Revision' ? 'rgba(59, 130, 246, 0.12)' :
+                                        'rgba(244, 63, 94, 0.12)',
+                                  color: task.status === 'Completed' ? '#10b981' :
+                                    task.status === 'Pending' ? '#f59e0b' :
+                                      task.status === 'Revision' ? '#3b82f6' :
+                                        '#f43f5e'
+                                }}
+                              >
+                                {task.status === 'Pending' ? 'TO DO' : task.status}
+                              </span>
+
+                              <span className="text-gray-300 dark:text-gray-700">•</span>
+
+                              {/* Date + Relative badge */}
+                              <div className="inline-flex items-center gap-1.5 font-mono">
+                                <span className="text-gray-500 dark:text-gray-400">
                                   {(() => {
                                     if (!task.date) return '';
                                     const [y, m, d] = task.date.split('-');
@@ -668,7 +690,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onQuickAdd, onViewTask }) 
                                   })()}
                                 </span>
                                 {task.date && (
-                                  <span className={`text-[10px] font-sans font-bold px-1.5 py-0.5 rounded-md border ${getRelativeBadgeStyle(task.date)}`}>
+                                  <span className={`text-[10px] font-sans px-1.5 py-0.2 rounded ${getRelativeBadgeStyle(task.date)}`}>
                                     {getRelativeDateLabel(task.date)}
                                   </span>
                                 )}
@@ -676,9 +698,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ onQuickAdd, onViewTask }) 
 
                               {task.projectLink && (
                                 <>
-                                  <span className="hidden sm:inline text-gray-500">•</span>
-                                  <span className="hidden sm:inline-flex shrink-0 items-center gap-1 bg-emerald-500/5 px-1.5 py-0.5 rounded text-[10px] text-emerald-500">
-                                    <Link className="w-2.5 h-2.5" /> Google Drive / Link
+                                  <span className="hidden sm:inline text-gray-300 dark:text-gray-700">•</span>
+                                  <span className="hidden sm:inline-flex shrink-0 items-center gap-1 text-[10px] text-emerald-500 font-semibold">
+                                    <Link className="w-3 h-3" /> Link
                                   </span>
                                 </>
                               )}
@@ -687,7 +709,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onQuickAdd, onViewTask }) 
                         </div>
 
                         <div className="text-right shrink-0">
-                          <p className="text-sm font-bold text-gray-900 dark:text-white">
+                          <p className="text-sm font-bold text-gray-900 dark:text-white font-mono">
                             ${task.usdRate.toFixed(2)}
                           </p>
                           {task.clientId === 'living-core' && task.imageCount !== undefined && task.imageCount > 0 && (
@@ -695,7 +717,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onQuickAdd, onViewTask }) 
                               {task.imageCount} imgs @ ${task.ratePerImage || 1.5}
                             </p>
                           )}
-                          <p className="text-[10px] text-gray-400 mt-0.5">
+                          <p className="text-[10px] text-gray-400 font-mono mt-0.5">
                             ₱{task.phpAmount.toLocaleString()}
                           </p>
                         </div>
