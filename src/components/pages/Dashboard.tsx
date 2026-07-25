@@ -19,7 +19,7 @@ import {
   ChevronUp,
   X
 } from 'lucide-react';
-import { Task, Client, getLocalDateString } from '../../types';
+import { Task, Client, getLocalDateString, formatExactTime } from '../../types';
 
 // Helper to compute human-friendly relative date labels (e.g. "Today", "Yesterday", "2d ago", "In 2d")
 const getRelativeDateLabel = (dateStr: string): string => {
@@ -667,6 +667,13 @@ export const Dashboard: React.FC<DashboardProps> = ({ onQuickAdd, onViewTask }) 
                               >
                                 {task.status === 'Pending' ? 'TO DO' : task.status}
                               </span>
+
+                              {/* Exact time when status changed */}
+                              {formatExactTime(task.statusUpdatedAt || task.createdAt) && (
+                                <span className="text-[10px] font-semibold text-gray-400 dark:text-gray-400/80 font-mono shrink-0">
+                                  {formatExactTime(task.statusUpdatedAt || task.createdAt)}
+                                </span>
+                              )}
                             </div>
 
                             {/* Clean Sub-Metadata line */}

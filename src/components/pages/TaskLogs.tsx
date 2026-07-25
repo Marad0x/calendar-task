@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useApp } from '../../context/AppContext';
-import { Task, getLocalDateString } from '../../types';
+import { Task, getLocalDateString, formatExactTime } from '../../types';
 import { 
   Search, 
   ArrowUpDown, 
@@ -280,6 +280,11 @@ export const TaskLogs: React.FC<TaskLogsProps> = ({ onEditTask }) => {
                           >
                             {task.status === 'Pending' ? 'TO DO' : task.status}
                           </span>
+                          {formatExactTime(task.statusUpdatedAt || task.createdAt) && (
+                            <span className="text-[10px] font-mono text-gray-400 font-semibold ml-1">
+                              {formatExactTime(task.statusUpdatedAt || task.createdAt)}
+                            </span>
+                          )}
                         </div>
                       </td>
                       <td className="py-3.5 px-4 text-gray-900 dark:text-white font-mono whitespace-nowrap">

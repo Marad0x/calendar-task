@@ -571,12 +571,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     if (!currentUser) return;
     const targetUserId = taskData.userId || currentUser.id;
     const phpAmount = Number((taskData.usdRate * taskData.exchangeRate).toFixed(2));
+    const nowIso = new Date().toISOString();
     const newTask: Task = {
       ...taskData,
       id: 'task_' + Math.random().toString(36).substring(2, 9),
       userId: targetUserId,
       phpAmount,
-      createdAt: new Date().toISOString()
+      createdAt: nowIso,
+      statusUpdatedAt: nowIso
     };
 
     if (targetUserId === currentUser.id) {
@@ -610,10 +612,21 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const oldUserId = existingTask.userId;
     const newUserId = taskData.userId || oldUserId;
 
+    // Track status change exact timestamp
+    let statusUpdatedAt = existingTask.statusUpdatedAt;
+    if (taskData.statusUpdatedAt) {
+      statusUpdatedAt = taskData.statusUpdatedAt;
+    } else if (taskData.status !== undefined && taskData.status !== existingTask.status) {
+      statusUpdatedAt = new Date().toISOString();
+    } else if (!statusUpdatedAt) {
+      statusUpdatedAt = existingTask.createdAt;
+    }
+
     const merged: Task = {
       ...existingTask,
       ...taskData,
-      userId: newUserId
+      userId: newUserId,
+      statusUpdatedAt
     };
 
     if (taskData.usdRate !== undefined || taskData.exchangeRate !== undefined) {

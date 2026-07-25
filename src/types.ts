@@ -29,6 +29,7 @@ export interface Task {
   imageCount?: number;
   ratePerImage?: number;
   createdAt: string;
+  statusUpdatedAt?: string;
 }
 
 export interface Client {
@@ -60,3 +61,11 @@ export const getLocalDateString = (d: Date = new Date()): string => {
   const localDate = new Date(d.getTime() - (offset * 60 * 1000));
   return localDate.toISOString().split('T')[0];
 };
+
+export const formatExactTime = (isoString?: string): string => {
+  if (!isoString) return '';
+  const date = new Date(isoString);
+  if (isNaN(date.getTime())) return '';
+  return date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true });
+};
+
