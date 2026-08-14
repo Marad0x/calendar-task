@@ -437,8 +437,8 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ onQuickAdd, onEditTa
                   </div>
 
                   {/* Tasks list vertical container */}
-                  <div className="flex-1 space-y-1 overflow-y-auto max-h-24 pr-0.5 no-scrollbar">
-                    {dayTasks.slice(0, 3).map((task) => {
+                  <div className="flex-1 space-y-1 overflow-y-auto max-h-28 pr-0.5 custom-scrollbar">
+                    {dayTasks.map((task) => {
                       const client = clients.find(c => c.id === task.clientId);
                       return (
                         <div
@@ -496,28 +496,6 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ onQuickAdd, onEditTa
                         </div>
                       );
                     })}
-                    {dayTasks.length > 3 && (
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          const dateLabel = new Date(day.dateStr).toLocaleDateString(undefined, { 
-                            weekday: 'long', 
-                            month: 'long', 
-                            day: 'numeric', 
-                            year: 'numeric' 
-                          });
-                          setSelectedDateTasks({
-                            dateStr: day.dateStr,
-                            label: dateLabel,
-                            tasks: dayTasks
-                          });
-                        }}
-                        className="text-[9px] font-bold text-amber-600 dark:text-amber-400 hover:underline pl-1 cursor-pointer block text-left mt-0.5"
-                      >
-                        + {dayTasks.length - 3} more
-                      </button>
-                    )}
                   </div>
 
                   {/* Day Earnings summary footer if exists */}
