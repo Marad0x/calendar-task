@@ -155,9 +155,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ onQuickAdd, onViewTask }) 
   const [customStartDate, setCustomStartDate] = useState<string>('');
   const [customEndDate, setCustomEndDate] = useState<string>('');
 
-  // Generate dynamic dropdown options for leaderboard
+  // Dynamic dropdown options for leaderboard
   const leaderboardPeriodOptions = useMemo(() => {
-    const options = [
+    return [
       { value: 'this-week', label: 'This Week' },
       { value: 'last-week', label: 'Last Week' },
       { value: 'this-month', label: 'This Month' },
@@ -166,18 +166,6 @@ export const Dashboard: React.FC<DashboardProps> = ({ onQuickAdd, onViewTask }) 
       { value: 'all-time', label: 'All Time' },
       { value: 'custom-range', label: 'Custom Range...' },
     ];
-
-    // Add past 6 months
-    const now = new Date();
-    for (let i = 1; i <= 6; i++) {
-      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      const year = d.getFullYear();
-      const month = String(d.getMonth() + 1).padStart(2, '0');
-      const val = `${year}-${month}`;
-      const label = d.toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
-      options.push({ value: val, label });
-    }
-    return options;
   }, []);
 
   // Earnings comparisons with real profiles (users list)
