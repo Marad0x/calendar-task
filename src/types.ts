@@ -9,7 +9,7 @@ export interface User {
   createdAt: string;
 }
 
-export type TaskStatus = 'Completed' | 'Pending' | 'Revision' | 'Cancelled';
+export type TaskStatus = 'Completed' | 'Pending' | 'In Progress' | 'Revision' | 'Cancelled';
 export type TaskPriority = 'Low' | 'Medium' | 'High';
 
 export interface Task {

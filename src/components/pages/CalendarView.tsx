@@ -15,7 +15,8 @@ import {
   CheckCircle2,
   Clock,
   AlertCircle,
-  XCircle
+  XCircle,
+  PlayCircle
 } from 'lucide-react';
 import { Task, Client, TaskStatus, getLocalDateString } from '../../types';
 
@@ -26,10 +27,11 @@ interface CalendarViewProps {
 }
 
 const statusColorMap: Record<TaskStatus, string> = {
-  Completed: '#10b981', // emerald-500
-  Pending: '#f59e0b',   // amber-500
-  Revision: '#3b82f6',  // blue-500
-  Cancelled: '#f43f5e'  // rose-500
+  Completed: '#10b981',   // emerald-500
+  Pending: '#f59e0b',     // amber-500
+  'In Progress': '#3b82f6', // blue-500
+  Revision: '#8b5cf6',    // purple-500
+  Cancelled: '#f43f5e'    // rose-500
 };
 
 export const CalendarView: React.FC<CalendarViewProps> = ({ onQuickAdd, onEditTask, onDuplicateTask }) => {
@@ -369,6 +371,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ onQuickAdd, onEditTa
             >
               <option value="all">All Statuses</option>
               <option value="Completed">Completed</option>
+              <option value="In Progress">In Progress</option>
               <option value="Pending">TO DO</option>
               <option value="Revision">Revision</option>
               <option value="Cancelled">Cancelled</option>
@@ -450,10 +453,12 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ onQuickAdd, onEditTa
                           className={`px-2 py-1 text-[10px] font-medium rounded-md border text-left cursor-pointer hover:shadow-xs truncate flex items-center justify-between group/task transition-all ${
                             task.status === 'Completed'
                               ? 'bg-emerald-50/70 dark:bg-emerald-950/20 border-emerald-500/20 dark:border-emerald-500/10 text-emerald-700 dark:text-emerald-400 hover:border-emerald-500/50'
+                              : task.status === 'In Progress'
+                              ? 'bg-blue-50/70 dark:bg-blue-950/20 border-blue-500/20 dark:border-blue-500/10 text-blue-700 dark:text-blue-400 hover:border-blue-500/50'
                               : task.status === 'Pending'
                               ? 'bg-amber-50/70 dark:bg-amber-950/20 border-amber-500/20 dark:border-amber-500/10 text-amber-700 dark:text-amber-400 hover:border-amber-500/50'
                               : task.status === 'Revision'
-                              ? 'bg-blue-50/70 dark:bg-blue-950/20 border-blue-500/20 dark:border-blue-500/10 text-blue-700 dark:text-blue-400 hover:border-blue-500/50'
+                              ? 'bg-purple-50/70 dark:bg-purple-950/20 border-purple-500/20 dark:border-purple-500/10 text-purple-700 dark:text-purple-400 hover:border-purple-500/50'
                               : 'bg-rose-50/70 dark:bg-rose-950/20 border-rose-500/20 dark:border-rose-500/10 text-rose-700 dark:text-rose-400 hover:border-rose-500/50'
                           }`}
                           title={`${task.title} ($${task.usdRate})`}
@@ -468,31 +473,49 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ onQuickAdd, onEditTa
                           <span className="shrink-0 font-extrabold font-mono text-[9px] bg-gray-100 dark:bg-gray-800 text-black dark:text-white px-1 py-0.2 rounded mr-1 border border-gray-200 dark:border-gray-700">
                             ${task.usdRate.toFixed(1)}
                           </span>
-                          {(task.status === 'Pending' || task.status === 'Revision') ? (
-                            <button
-                              id={`complete-task-btn-${task.id}`}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                updateTask(task.id, { status: 'Completed' });
-                              }}
-                              className="opacity-0 group-hover/task:opacity-100 p-0.5 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 rounded ml-1 shrink-0"
-                              title="Mark as Completed"
-                            >
-                              <CheckCircle2 className="w-2.5 h-2.5" />
-                            </button>
-                          ) : (
-                            <button
-                              id={`duplicate-task-btn-${task.id}`}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                onDuplicateTask(task.id);
-                              }}
-                              className="opacity-0 group-hover/task:opacity-100 p-0.5 hover:bg-black/10 dark:hover:bg-white/10 rounded ml-1 text-current shrink-0"
-                              title="Duplicate previous task"
-                            >
-                              <Copy className="w-2.5 h-2.5" />
-                            </button>
-                          )}
+                          <div className="flex items-center shrink-0">
+                            {task.status !== 'Completed' ? (
+                              <>
+                                {task.status !== 'In Progress' && (
+                                  <button
+                                    id={`inprogress-task-btn-${task.id}`}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      updateTask(task.id, { status: 'In Progress' });
+                                    }}
+                                    className="opacity-0 group-hover/task:opacity-100 p-0.5 hover:bg-blue-500/20 text-blue-600 dark:text-blue-400 rounded ml-0.5 shrink-0"
+                                    title="Mark as In Progress"
+                                  >
+                                    <PlayCircle className="w-2.5 h-2.5" />
+                                  </button>
+                                )}
+                                <button
+                                  id={`complete-task-btn-${task.id}`}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    updateTask(task.id, { status: 'Completed' });
+                                  }}
+                                  className="opacity-0 group-hover/task:opacity-100 p-0.5 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 rounded ml-0.5 shrink-0"
+                                  title="Mark as Completed"
+                                >
+                                  <CheckCircle2 className="w-2.5 h-2.5" />
+                                </button>
+                              </>
+                            ) : (
+                              <button
+                                id={`copy-title-btn-${task.id}`}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  navigator.clipboard.writeText(task.title);
+                                  addToast('Task name copied to clipboard!', 'success');
+                                }}
+                                className="opacity-0 group-hover/task:opacity-100 p-0.5 hover:bg-black/10 dark:hover:bg-white/10 rounded ml-1 text-current shrink-0"
+                                title="Copy task name"
+                              >
+                                <Copy className="w-2.5 h-2.5" />
+                              </button>
+                            )}
+                          </div>
                         </div>
                       );
                     })}
@@ -551,10 +574,12 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ onQuickAdd, onEditTa
                           className={`p-2.5 rounded-xl border cursor-pointer hover:shadow-md transition-all text-left flex flex-col justify-between h-28 ${
                             task.status === 'Completed'
                               ? 'bg-emerald-50/30 dark:bg-emerald-950/10 border-emerald-500/20 text-emerald-700 dark:text-emerald-400 hover:border-emerald-500/50'
+                              : task.status === 'In Progress'
+                              ? 'bg-blue-50/30 dark:bg-blue-950/10 border-blue-500/20 text-blue-700 dark:text-blue-400 hover:border-blue-500/50'
                               : task.status === 'Pending'
                               ? 'bg-amber-50/30 dark:bg-amber-950/10 border-amber-500/20 text-amber-700 dark:text-amber-400 hover:border-amber-500/50'
                               : task.status === 'Revision'
-                              ? 'bg-blue-50/30 dark:bg-blue-950/10 border-blue-500/20 text-blue-700 dark:text-blue-400 hover:border-blue-500/50'
+                              ? 'bg-purple-50/30 dark:bg-purple-950/10 border-purple-500/20 text-purple-700 dark:text-purple-400 hover:border-purple-500/50'
                               : 'bg-rose-50/30 dark:bg-rose-950/10 border-rose-500/20 text-rose-700 dark:text-rose-400 hover:border-rose-500/50'
                           }`}
                         >
@@ -583,20 +608,24 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ onQuickAdd, onEditTa
                               <div className="p-0.5 rounded-full border transition-all flex items-center justify-center shrink-0"
                                 style={{
                                   backgroundColor: task.status === 'Completed' ? 'rgba(16, 185, 129, 0.08)' :
+                                                   task.status === 'In Progress' ? 'rgba(59, 130, 246, 0.08)' :
                                                    task.status === 'Pending' ? 'rgba(245, 158, 11, 0.08)' :
-                                                   task.status === 'Revision' ? 'rgba(59, 130, 246, 0.08)' :
+                                                   task.status === 'Revision' ? 'rgba(139, 92, 246, 0.08)' :
                                                    'rgba(244, 63, 94, 0.08)',
                                   borderColor: task.status === 'Completed' ? 'rgba(16, 185, 129, 0.2)' :
+                                               task.status === 'In Progress' ? 'rgba(59, 130, 246, 0.2)' :
                                                task.status === 'Pending' ? 'rgba(245, 158, 11, 0.2)' :
-                                               task.status === 'Revision' ? 'rgba(59, 130, 246, 0.2)' :
+                                               task.status === 'Revision' ? 'rgba(139, 92, 246, 0.2)' :
                                                'rgba(244, 63, 94, 0.2)',
                                   color: task.status === 'Completed' ? '#10b981' :
+                                         task.status === 'In Progress' ? '#3b82f6' :
                                          task.status === 'Pending' ? '#f59e0b' :
-                                         task.status === 'Revision' ? '#3b82f6' :
+                                         task.status === 'Revision' ? '#8b5cf6' :
                                          '#f43f5e'
                                 }}
                               >
                                 {task.status === 'Completed' && <CheckCircle2 className="w-2.5 h-2.5" />}
+                                {task.status === 'In Progress' && <PlayCircle className="w-2.5 h-2.5" />}
                                 {task.status === 'Pending' && <Clock className="w-2.5 h-2.5" />}
                                 {task.status === 'Revision' && <AlertCircle className="w-2.5 h-2.5" />}
                                 {task.status === 'Cancelled' && <XCircle className="w-2.5 h-2.5" />}
@@ -604,8 +633,9 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ onQuickAdd, onEditTa
                               <span className="text-[9px] font-bold uppercase tracking-wider"
                                 style={{
                                   color: task.status === 'Completed' ? '#10b981' :
+                                         task.status === 'In Progress' ? '#3b82f6' :
                                          task.status === 'Pending' ? '#f59e0b' :
-                                         task.status === 'Revision' ? '#3b82f6' :
+                                         task.status === 'Revision' ? '#8b5cf6' :
                                          '#f43f5e'
                                 }}
                               >
@@ -673,8 +703,9 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ onQuickAdd, onEditTa
                         className="w-4 h-4 rounded-full shrink-0"
                         style={{
                           backgroundColor: task.status === 'Completed' ? '#10b981' :
+                                           task.status === 'In Progress' ? '#3b82f6' :
                                            task.status === 'Pending' ? '#f59e0b' :
-                                           task.status === 'Revision' ? '#3b82f6' :
+                                           task.status === 'Revision' ? '#8b5cf6' :
                                            '#f43f5e'
                         }}
                       />
@@ -689,20 +720,24 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ onQuickAdd, onEditTa
                             <div className="p-0.5 rounded-full border transition-all flex items-center justify-center shrink-0"
                               style={{
                                 backgroundColor: task.status === 'Completed' ? 'rgba(16, 185, 129, 0.08)' :
+                                                 task.status === 'In Progress' ? 'rgba(59, 130, 246, 0.08)' :
                                                  task.status === 'Pending' ? 'rgba(245, 158, 11, 0.08)' :
-                                                 task.status === 'Revision' ? 'rgba(59, 130, 246, 0.08)' :
+                                                 task.status === 'Revision' ? 'rgba(139, 92, 246, 0.08)' :
                                                  'rgba(244, 63, 94, 0.08)',
                                 borderColor: task.status === 'Completed' ? 'rgba(16, 185, 129, 0.2)' :
+                                             task.status === 'In Progress' ? 'rgba(59, 130, 246, 0.2)' :
                                              task.status === 'Pending' ? 'rgba(245, 158, 11, 0.2)' :
-                                             task.status === 'Revision' ? 'rgba(59, 130, 246, 0.2)' :
+                                             task.status === 'Revision' ? 'rgba(139, 92, 246, 0.2)' :
                                              'rgba(244, 63, 94, 0.2)',
                                 color: task.status === 'Completed' ? '#10b981' :
+                                       task.status === 'In Progress' ? '#3b82f6' :
                                        task.status === 'Pending' ? '#f59e0b' :
-                                       task.status === 'Revision' ? '#3b82f6' :
+                                       task.status === 'Revision' ? '#8b5cf6' :
                                        '#f43f5e'
                               }}
                             >
                               {task.status === 'Completed' && <CheckCircle2 className="w-2.5 h-2.5" />}
+                              {task.status === 'In Progress' && <PlayCircle className="w-2.5 h-2.5" />}
                               {task.status === 'Pending' && <Clock className="w-2.5 h-2.5" />}
                               {task.status === 'Revision' && <AlertCircle className="w-2.5 h-2.5" />}
                               {task.status === 'Cancelled' && <XCircle className="w-2.5 h-2.5" />}
@@ -710,8 +745,9 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ onQuickAdd, onEditTa
                             <span className="text-[9px] font-bold uppercase tracking-wider"
                               style={{
                                 color: task.status === 'Completed' ? '#10b981' :
+                                       task.status === 'In Progress' ? '#3b82f6' :
                                        task.status === 'Pending' ? '#f59e0b' :
-                                       task.status === 'Revision' ? '#3b82f6' :
+                                       task.status === 'Revision' ? '#8b5cf6' :
                                        '#f43f5e'
                               }}
                             >
@@ -824,10 +860,12 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ onQuickAdd, onEditTa
                     className={`p-3 rounded-xl border cursor-pointer hover:shadow-md transition-all flex items-center justify-between ${
                       task.status === 'Completed'
                         ? 'bg-emerald-50/70 dark:bg-emerald-950/20 border-emerald-500/20 dark:border-emerald-500/10 text-emerald-700 dark:text-emerald-400 hover:border-emerald-500/50'
+                        : task.status === 'In Progress'
+                        ? 'bg-blue-50/70 dark:bg-blue-950/20 border-blue-500/20 dark:border-blue-500/10 text-blue-700 dark:text-blue-400 hover:border-blue-500/50'
                         : task.status === 'Pending'
                         ? 'bg-amber-50/70 dark:bg-amber-950/20 border-amber-500/20 dark:border-amber-500/10 text-amber-700 dark:text-amber-400 hover:border-amber-500/50'
                         : task.status === 'Revision'
-                        ? 'bg-blue-50/70 dark:bg-blue-950/20 border-blue-500/20 dark:border-blue-500/10 text-blue-700 dark:text-blue-400 hover:border-blue-500/50'
+                        ? 'bg-purple-50/70 dark:bg-purple-950/20 border-purple-500/20 dark:border-purple-500/10 text-purple-700 dark:text-purple-400 hover:border-purple-500/50'
                         : 'bg-rose-50/70 dark:bg-rose-950/20 border-rose-500/20 dark:border-rose-500/10 text-rose-700 dark:text-rose-400 hover:border-rose-500/50'
                     }`}
                   >
@@ -856,20 +894,24 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ onQuickAdd, onEditTa
                         title={task.status}
                         style={{
                           backgroundColor: task.status === 'Completed' ? 'rgba(16, 185, 129, 0.08)' :
+                                           task.status === 'In Progress' ? 'rgba(59, 130, 246, 0.08)' :
                                            task.status === 'Pending' ? 'rgba(245, 158, 11, 0.08)' :
-                                           task.status === 'Revision' ? 'rgba(59, 130, 246, 0.08)' :
+                                           task.status === 'Revision' ? 'rgba(139, 92, 246, 0.08)' :
                                            'rgba(244, 63, 94, 0.08)',
                           borderColor: task.status === 'Completed' ? 'rgba(16, 185, 129, 0.2)' :
+                                       task.status === 'In Progress' ? 'rgba(59, 130, 246, 0.2)' :
                                        task.status === 'Pending' ? 'rgba(245, 158, 11, 0.2)' :
-                                       task.status === 'Revision' ? 'rgba(59, 130, 246, 0.2)' :
+                                       task.status === 'Revision' ? 'rgba(139, 92, 246, 0.2)' :
                                        'rgba(244, 63, 94, 0.2)',
                           color: task.status === 'Completed' ? '#10b981' :
+                                 task.status === 'In Progress' ? '#3b82f6' :
                                  task.status === 'Pending' ? '#f59e0b' :
-                                 task.status === 'Revision' ? '#3b82f6' :
+                                 task.status === 'Revision' ? '#8b5cf6' :
                                  '#f43f5e'
                         }}
                       >
                         {task.status === 'Completed' && <CheckCircle2 className="w-3.5 h-3.5" />}
+                        {task.status === 'In Progress' && <PlayCircle className="w-3.5 h-3.5" />}
                         {task.status === 'Pending' && <Clock className="w-3.5 h-3.5" />}
                         {task.status === 'Revision' && <AlertCircle className="w-3.5 h-3.5" />}
                         {task.status === 'Cancelled' && <XCircle className="w-3.5 h-3.5" />}

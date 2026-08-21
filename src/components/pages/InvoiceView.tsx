@@ -506,8 +506,9 @@ export const InvoiceView: React.FC = () => {
                 <div className="flex items-center gap-3 shrink-0">
                   <span className={`px-2 py-0.5 text-[9px] font-extrabold rounded-full ${
                     task.status === 'Completed' ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/30 dark:text-emerald-400' :
-                    task.status === 'Revision' ? 'bg-amber-100 text-amber-800 dark:bg-amber-950/30 dark:text-amber-400' :
-                    task.status === 'Pending' ? 'bg-blue-100 text-blue-800 dark:bg-blue-950/30 dark:text-blue-400' :
+                    task.status === 'In Progress' ? 'bg-blue-100 text-blue-800 dark:bg-blue-950/30 dark:text-blue-400' :
+                    task.status === 'Pending' ? 'bg-amber-100 text-amber-800 dark:bg-amber-950/30 dark:text-amber-400' :
+                    task.status === 'Revision' ? 'bg-purple-100 text-purple-800 dark:bg-purple-950/30 dark:text-purple-400' :
                     'bg-gray-100 text-gray-800 dark:bg-white/5 dark:text-gray-400'
                   }`}>
                     {task.status}

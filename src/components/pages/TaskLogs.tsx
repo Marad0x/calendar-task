@@ -15,7 +15,8 @@ import {
   CheckCircle2,
   Clock,
   AlertCircle,
-  XCircle
+  XCircle,
+  PlayCircle
 } from 'lucide-react';
 
 interface TaskLogsProps {
@@ -186,6 +187,7 @@ export const TaskLogs: React.FC<TaskLogsProps> = ({ onEditTask }) => {
             >
               <option value="all">All Statuses</option>
               <option value="Completed">Completed</option>
+              <option value="In Progress">In Progress</option>
               <option value="Pending">TO DO</option>
               <option value="Revision">Revision</option>
               <option value="Cancelled">Cancelled</option>
@@ -252,20 +254,24 @@ export const TaskLogs: React.FC<TaskLogsProps> = ({ onEditTask }) => {
                           <div className="p-1.5 rounded-xl border transition-all flex items-center justify-center shrink-0"
                             style={{
                               backgroundColor: task.status === 'Completed' ? 'rgba(16, 185, 129, 0.08)' :
+                                               task.status === 'In Progress' ? 'rgba(59, 130, 246, 0.08)' :
                                                task.status === 'Pending' ? 'rgba(245, 158, 11, 0.08)' :
-                                               task.status === 'Revision' ? 'rgba(59, 130, 246, 0.08)' :
+                                               task.status === 'Revision' ? 'rgba(139, 92, 246, 0.08)' :
                                                'rgba(244, 63, 94, 0.08)',
                               borderColor: task.status === 'Completed' ? 'rgba(16, 185, 129, 0.2)' :
+                                           task.status === 'In Progress' ? 'rgba(59, 130, 246, 0.2)' :
                                            task.status === 'Pending' ? 'rgba(245, 158, 11, 0.2)' :
-                                           task.status === 'Revision' ? 'rgba(59, 130, 246, 0.2)' :
+                                           task.status === 'Revision' ? 'rgba(139, 92, 246, 0.2)' :
                                            'rgba(244, 63, 94, 0.2)',
                               color: task.status === 'Completed' ? '#10b981' :
+                                     task.status === 'In Progress' ? '#3b82f6' :
                                      task.status === 'Pending' ? '#f59e0b' :
-                                     task.status === 'Revision' ? '#3b82f6' :
+                                     task.status === 'Revision' ? '#8b5cf6' :
                                      '#f43f5e'
                             }}
                           >
                             {task.status === 'Completed' && <CheckCircle2 className="w-3.5 h-3.5" />}
+                            {task.status === 'In Progress' && <PlayCircle className="w-3.5 h-3.5" />}
                             {task.status === 'Pending' && <Clock className="w-3.5 h-3.5" />}
                             {task.status === 'Revision' && <AlertCircle className="w-3.5 h-3.5" />}
                             {task.status === 'Cancelled' && <XCircle className="w-3.5 h-3.5" />}
@@ -273,8 +279,9 @@ export const TaskLogs: React.FC<TaskLogsProps> = ({ onEditTask }) => {
                           <span className="text-[10px] font-bold tracking-wide uppercase"
                             style={{
                               color: task.status === 'Completed' ? '#10b981' :
+                                     task.status === 'In Progress' ? '#3b82f6' :
                                      task.status === 'Pending' ? '#f59e0b' :
-                                     task.status === 'Revision' ? '#3b82f6' :
+                                     task.status === 'Revision' ? '#8b5cf6' :
                                      '#f43f5e'
                             }}
                           >

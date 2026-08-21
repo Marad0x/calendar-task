@@ -188,15 +188,16 @@ export const Reports: React.FC = () => {
 
   // CHART DATA BUILDER: Task Status Distribution
   const statusDistributionData = useMemo(() => {
-    const statuses: Record<string, number> = { Completed: 0, Pending: 0, Revision: 0, Cancelled: 0 };
+    const statuses: Record<string, number> = { Completed: 0, 'In Progress': 0, Pending: 0, Revision: 0, Cancelled: 0 };
     tasks.forEach((t) => {
       statuses[t.status] = (statuses[t.status] || 0) + 1;
     });
 
     const colors: Record<string, string> = {
       Completed: '#10b981',
+      'In Progress': '#3b82f6',
       Pending: '#f59e0b',
-      Revision: '#3b82f6',
+      Revision: '#8b5cf6',
       Cancelled: '#ef4444'
     };
 

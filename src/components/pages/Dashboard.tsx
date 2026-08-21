@@ -13,6 +13,7 @@ import {
   Link,
   AlertCircle,
   XCircle,
+  PlayCircle,
   ChevronLeft,
   ChevronRight,
   ChevronDown,
@@ -62,7 +63,7 @@ interface DashboardProps {
 }
 
 export const Dashboard: React.FC<DashboardProps> = ({ onQuickAdd, onViewTask }) => {
-  const { currentUser, users, tasks, allTasks, clients, setActiveTab } = useApp();
+  const { currentUser, users, tasks, allTasks, clients, setActiveTab, updateTask } = useApp();
 
   // Selected profile user for stats view
   const [selectedProfileUserId, setSelectedProfileUserId] = useState<string | null>(null);
@@ -629,16 +630,19 @@ export const Dashboard: React.FC<DashboardProps> = ({ onQuickAdd, onViewTask }) 
                             className="w-8 h-8 rounded-xl shrink-0 flex items-center justify-center transition-transform group-hover:scale-105"
                             style={{
                               backgroundColor: task.status === 'Completed' ? 'rgba(16, 185, 129, 0.12)' :
+                                task.status === 'In Progress' ? 'rgba(59, 130, 246, 0.12)' :
                                 task.status === 'Pending' ? 'rgba(245, 158, 11, 0.12)' :
-                                  task.status === 'Revision' ? 'rgba(59, 130, 246, 0.12)' :
+                                  task.status === 'Revision' ? 'rgba(139, 92, 246, 0.12)' :
                                     'rgba(244, 63, 94, 0.12)',
                               color: task.status === 'Completed' ? '#10b981' :
+                                task.status === 'In Progress' ? '#3b82f6' :
                                 task.status === 'Pending' ? '#f59e0b' :
-                                  task.status === 'Revision' ? '#3b82f6' :
+                                  task.status === 'Revision' ? '#8b5cf6' :
                                     '#f43f5e'
                             }}
                           >
                             {task.status === 'Completed' && <CheckCircle2 className="w-4 h-4" />}
+                            {task.status === 'In Progress' && <PlayCircle className="w-4 h-4" />}
                             {task.status === 'Pending' && <Clock className="w-4 h-4" />}
                             {task.status === 'Revision' && <AlertCircle className="w-4 h-4" />}
                             {task.status === 'Cancelled' && <XCircle className="w-4 h-4" />}
@@ -656,12 +660,14 @@ export const Dashboard: React.FC<DashboardProps> = ({ onQuickAdd, onViewTask }) 
                                 className="text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded tracking-wider shrink-0"
                                 style={{
                                   backgroundColor: task.status === 'Completed' ? 'rgba(16, 185, 129, 0.12)' :
+                                    task.status === 'In Progress' ? 'rgba(59, 130, 246, 0.12)' :
                                     task.status === 'Pending' ? 'rgba(245, 158, 11, 0.12)' :
-                                      task.status === 'Revision' ? 'rgba(59, 130, 246, 0.12)' :
+                                      task.status === 'Revision' ? 'rgba(139, 92, 246, 0.12)' :
                                         'rgba(244, 63, 94, 0.12)',
                                   color: task.status === 'Completed' ? '#10b981' :
+                                    task.status === 'In Progress' ? '#3b82f6' :
                                     task.status === 'Pending' ? '#f59e0b' :
-                                      task.status === 'Revision' ? '#3b82f6' :
+                                      task.status === 'Revision' ? '#8b5cf6' :
                                         '#f43f5e'
                                 }}
                               >
@@ -728,18 +734,48 @@ export const Dashboard: React.FC<DashboardProps> = ({ onQuickAdd, onViewTask }) 
                           </div>
                         </div>
 
-                        <div className="text-right shrink-0">
-                          <p className="text-sm font-bold text-gray-900 dark:text-white font-mono">
-                            ${task.usdRate.toFixed(2)}
-                          </p>
-                          {task.clientId === 'living-core' && task.imageCount !== undefined && task.imageCount > 0 && (
-                            <p className="text-[9px] text-emerald-500 font-bold leading-none mt-0.5">
-                              {task.imageCount} imgs @ ${task.ratePerImage || 1.5}
+                        <div className="text-right shrink-0 flex items-center gap-2">
+                          <div className="flex flex-col items-end">
+                            <p className="text-sm font-bold text-gray-900 dark:text-white font-mono">
+                              ${task.usdRate.toFixed(2)}
                             </p>
+                            {task.clientId === 'living-core' && task.imageCount !== undefined && task.imageCount > 0 && (
+                              <p className="text-[9px] text-emerald-500 font-bold leading-none mt-0.5">
+                                {task.imageCount} imgs @ ${task.ratePerImage || 1.5}
+                              </p>
+                            )}
+                            <p className="text-[10px] text-gray-400 font-mono mt-0.5">
+                              ₱{task.phpAmount.toLocaleString()}
+                            </p>
+                          </div>
+                          {task.status !== 'Completed' && (
+                            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                              {task.status !== 'In Progress' && (
+                                <button
+                                  id={`dash-inprogress-task-btn-${task.id}`}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    updateTask(task.id, { status: 'In Progress' });
+                                  }}
+                                  className="p-1 hover:bg-blue-500/20 text-blue-600 dark:text-blue-400 rounded-lg transition-colors"
+                                  title="Mark as In Progress"
+                                >
+                                  <PlayCircle className="w-4 h-4" />
+                                </button>
+                              )}
+                              <button
+                                id={`dash-complete-task-btn-${task.id}`}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  updateTask(task.id, { status: 'Completed' });
+                                }}
+                                className="p-1 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 rounded-lg transition-colors"
+                                title="Mark as Completed"
+                              >
+                                <CheckCircle2 className="w-4 h-4" />
+                              </button>
+                            </div>
                           )}
-                          <p className="text-[10px] text-gray-400 font-mono mt-0.5">
-                            ₱{task.phpAmount.toLocaleString()}
-                          </p>
                         </div>
                       </div>
                     );
