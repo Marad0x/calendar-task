@@ -395,8 +395,12 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ onQuickAdd, onEditTa
           {/* Month grid days */}
           <div className="grid grid-cols-7 divide-x divide-y divide-white/20 dark:divide-white/5 border-t border-white/20 dark:divide-white/5">
             {monthDays.map((day) => {
-              const dayTasks = filteredTasks.filter((t) => t.date === day.dateStr);
+              const rawDayTasks = filteredTasks.filter((t) => t.date === day.dateStr);
+              const dayTasks = [...rawDayTasks].sort((a, b) => 
+                new Date(a.createdAt || a.id).getTime() - new Date(b.createdAt || b.id).getTime()
+              );
               const activeDayTasks = dayTasks.filter((t) => t.status !== 'Cancelled');
+              const remainingTasks = activeDayTasks.filter((t) => t.status !== 'Completed');
               
               const dayUsd = activeDayTasks.reduce((sum, t) => sum + t.usdRate, 0);
               const dayPhp = activeDayTasks.reduce((sum, t) => sum + t.phpAmount, 0);
@@ -521,11 +525,14 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ onQuickAdd, onEditTa
                     })}
                   </div>
 
-                  {/* Day Earnings summary footer if exists */}
-                  {dayUsd > 0 && (
+                  {/* Day Earnings & Remaining Tasks summary footer */}
+                  {dayTasks.length > 0 && (
                     <div className="mt-auto pt-1.5 border-t border-dashed border-gray-100 dark:border-gray-800 flex items-center justify-between text-[9px] font-mono font-bold text-emerald-600 dark:text-emerald-400 shrink-0">
-                      <span>{dayTasks.length} {dayTasks.length === 1 ? 'task' : 'tasks'}</span>
-                      <span>${dayUsd.toFixed(0)}</span>
+                      <span className="truncate pr-1">
+                        {dayTasks.length} {dayTasks.length === 1 ? 'task' : 'tasks'}
+                        {remainingTasks.length > 0 ? ` (${remainingTasks.length} remaining)` : ''}
+                      </span>
+                      {dayUsd > 0 && <span>${dayUsd.toFixed(0)}</span>}
                     </div>
                   )}
                 </div>
@@ -539,7 +546,10 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ onQuickAdd, onEditTa
         <div id="calendar-grid-week" className="glass-card rounded-2xl shadow-xs p-6">
           <div className="grid grid-cols-7 divide-x divide-white/20 dark:divide-white/5">
             {weekDays.map((day) => {
-              const dayTasks = filteredTasks.filter(t => t.date === day.dateStr);
+              const rawDayTasks = filteredTasks.filter(t => t.date === day.dateStr);
+              const dayTasks = [...rawDayTasks].sort((a, b) => 
+                new Date(a.createdAt || a.id).getTime() - new Date(b.createdAt || b.id).getTime()
+              );
               const isToday = getLocalDateString() === day.dateStr;
 
               return (
