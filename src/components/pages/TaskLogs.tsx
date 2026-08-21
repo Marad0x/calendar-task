@@ -121,7 +121,7 @@ export const TaskLogs: React.FC<TaskLogsProps> = ({ onEditTask }) => {
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.setAttribute('href', url);
-    link.setAttribute('download', `GYATLENDAR_Task_Log_${getLocalDateString()}.csv`);
+    link.setAttribute('download', `Mon_Cheri_Task_Log_${getLocalDateString()}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
