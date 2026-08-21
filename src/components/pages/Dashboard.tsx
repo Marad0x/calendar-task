@@ -68,8 +68,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ onQuickAdd, onViewTask }) 
   // Selected profile user for stats view
   const [selectedProfileUserId, setSelectedProfileUserId] = useState<string | null>(null);
 
-  // Recent tasks tab selection ('all' | 'completed' | 'pending')
-  const [recentTasksTab, setRecentTasksTab] = useState<'all' | 'completed' | 'pending'>('all');
+  // Recent tasks tab selection ('all' | 'completed' | 'in_progress' | 'pending')
+  const [recentTasksTab, setRecentTasksTab] = useState<'all' | 'completed' | 'in_progress' | 'pending'>('all');
 
   // Toggle show initial 4 vs expand all in Recent Tasks
   const [isRecentExpanded, setIsRecentExpanded] = useState(false);
@@ -199,12 +199,16 @@ export const Dashboard: React.FC<DashboardProps> = ({ onQuickAdd, onViewTask }) 
     const userList = users.map(u => {
       let totalUsd = 0;
       let totalPhp = 0;
+      let inProgressUsd = 0;
+      let inProgressPhp = 0;
       let pendingUsd = 0;
       let pendingPhp = 0;
       if (u.id === currentUser?.id) {
         const filtered = filterTasksByPeriod(tasks, leaderboardPeriod);
         totalUsd = filtered.reduce((sum, t) => sum + (t.status === 'Completed' ? t.usdRate : 0), 0);
         totalPhp = filtered.reduce((sum, t) => sum + (t.status === 'Completed' ? t.phpAmount : 0), 0);
+        inProgressUsd = filtered.reduce((sum, t) => sum + (t.status === 'In Progress' ? t.usdRate : 0), 0);
+        inProgressPhp = filtered.reduce((sum, t) => sum + (t.status === 'In Progress' ? t.phpAmount : 0), 0);
         pendingUsd = filtered.reduce((sum, t) => sum + (t.status === 'Pending' ? t.usdRate : 0), 0);
         pendingPhp = filtered.reduce((sum, t) => sum + (t.status === 'Pending' ? t.phpAmount : 0), 0);
       } else {
@@ -212,6 +216,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ onQuickAdd, onViewTask }) 
         const filtered = filterTasksByPeriod(otherTasks, leaderboardPeriod);
         totalUsd = filtered.reduce((sum: number, t: any) => sum + (t.status === 'Completed' ? t.usdRate : 0), 0);
         totalPhp = filtered.reduce((sum: number, t: any) => sum + (t.status === 'Completed' ? t.phpAmount : 0), 0);
+        inProgressUsd = filtered.reduce((sum: number, t: any) => sum + (t.status === 'In Progress' ? t.usdRate : 0), 0);
+        inProgressPhp = filtered.reduce((sum: number, t: any) => sum + (t.status === 'In Progress' ? t.phpAmount : 0), 0);
         pendingUsd = filtered.reduce((sum: number, t: any) => sum + (t.status === 'Pending' ? t.usdRate : 0), 0);
         pendingPhp = filtered.reduce((sum: number, t: any) => sum + (t.status === 'Pending' ? t.phpAmount : 0), 0);
       }
@@ -221,6 +227,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ onQuickAdd, onViewTask }) 
         avatar: u.avatar || `https://api.dicebear.com/7.x/adventurer/svg?seed=${encodeURIComponent(u.name)}`,
         totalUsd,
         totalPhp,
+        inProgressUsd,
+        inProgressPhp,
         pendingUsd,
         pendingPhp,
         isCurrent: u.id === currentUser?.id,
@@ -348,7 +356,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ onQuickAdd, onViewTask }) 
     allPending.sort((a, b) => a.date.localeCompare(b.date));
 
     const completedTasksList = localAllTasks.filter(t => t.status === 'Completed').sort(sortTasksDesc);
-    const pendingTasksList = localAllTasks.filter(t => t.status !== 'Completed').sort(sortTasksDesc);
+    const inProgressTasksList = localAllTasks.filter(t => t.status === 'In Progress').sort(sortTasksDesc);
+    const pendingTasksList = localAllTasks.filter(t => t.status === 'Pending').sort(sortTasksDesc);
 
     return {
       todayUsd,
@@ -364,6 +373,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onQuickAdd, onViewTask }) 
       completedThisWeekCount: completedThisWeek.length,
       recentTasks: localAllTasks,
       recentCompletedTasks: completedTasksList,
+      recentInProgressTasks: inProgressTasksList,
       recentPendingTasks: pendingTasksList,
       upcomingTasks: allPending.slice(0, 5)
     };
@@ -372,6 +382,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onQuickAdd, onViewTask }) 
   // Filter tasks to display in the Recent Tasks widget based on active tab
   const displayedRecentTasks = useMemo(() => {
     if (recentTasksTab === 'completed') return stats.recentCompletedTasks;
+    if (recentTasksTab === 'in_progress') return stats.recentInProgressTasks;
     if (recentTasksTab === 'pending') return stats.recentPendingTasks;
     return stats.recentTasks;
   }, [recentTasksTab, stats]);
@@ -572,6 +583,17 @@ export const Dashboard: React.FC<DashboardProps> = ({ onQuickAdd, onViewTask }) 
                     }`}
                   >
                     Completed ({stats.recentCompletedTasks.length})
+                  </button>
+                  <button
+                    id="recent-tab-inprogress"
+                    onClick={() => setRecentTasksTab('in_progress')}
+                    className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer flex items-center gap-1 ${
+                      recentTasksTab === 'in_progress'
+                        ? 'bg-blue-500 text-white shadow-xs'
+                        : 'text-gray-500 dark:text-gray-400 hover:text-blue-500 dark:hover:text-blue-400'
+                    }`}
+                  >
+                    In Progress ({stats.recentInProgressTasks.length})
                   </button>
                   <button
                     id="recent-tab-pending"
@@ -917,42 +939,6 @@ export const Dashboard: React.FC<DashboardProps> = ({ onQuickAdd, onViewTask }) 
 
         {/* Right Side Column Widgets */}
         <div className="space-y-6">
-          {/* Top Client Widget */}
-          <div id="widget-top-client" className="glass-card p-6 rounded-2xl shadow-sm">
-            <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4 flex items-center gap-1.5">
-              <Briefcase className="w-3.5 h-3.5 text-blue-500" /> Top Client / Workspace
-            </h3>
-            {stats.topClient ? (
-              <div className="flex items-center gap-3">
-                {stats.topClient.id === 'living-core' ? (
-                  <img src="/LIVINGCORE-LOGO.png" alt="Living Core" className="w-10 h-10 rounded-xl object-contain bg-white shrink-0" />
-                ) : (
-                  <div
-                    className="w-10 h-10 rounded-xl flex items-center justify-center text-white font-bold text-sm shadow-xs shrink-0"
-                    style={{ backgroundColor: stats.topClient.color }}
-                  >
-                    {stats.topClient.name.split(' ').map(n => n[0]).join('').substring(0, 2)}
-                  </div>
-                )}
-                <div>
-                  <h4 className="font-bold text-gray-900 dark:text-white text-sm">
-                    {stats.topClient.name}
-                  </h4>
-                  <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
-                    Highest income source this period
-                  </p>
-                </div>
-              </div>
-            ) : (
-              <div className="py-2 flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-gray-400 shrink-0">
-                  <Briefcase className="w-5 h-5" />
-                </div>
-                <p className="text-xs text-gray-400">No client earnings yet.</p>
-              </div>
-            )}
-          </div>
-
           {/* Freelancer Earnings Leaderboard */}
           <div className="glass-card rounded-2xl shadow-sm p-6 relative overflow-hidden">
             <div className="flex items-center justify-between gap-2 mb-4">
@@ -1022,9 +1008,23 @@ export const Dashboard: React.FC<DashboardProps> = ({ onQuickAdd, onViewTask }) 
                           ₱{item.totalPhp.toLocaleString(undefined, { maximumFractionDigits: 0 })}
                         </p>
                       </div>
+                      {(item.inProgressUsd > 0 || item.inProgressPhp > 0) && (
+                        <div className="flex flex-col items-end pt-1.5 mt-1 border-t border-black/10 dark:border-white/10 w-full">
+                          <div className="flex items-center gap-1.5 justify-end">
+                            <PlayCircle className="w-3 h-3 text-blue-500 shrink-0" />
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400">In Progress:</span>
+                            <span className="text-xs font-bold text-blue-600 dark:text-blue-400 font-mono">
+                              ${item.inProgressUsd.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                            </span>
+                          </div>
+                          <p className="text-xs font-bold text-gray-500 dark:text-gray-400 font-mono text-right mt-0.5">
+                            ₱{item.inProgressPhp.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                          </p>
+                        </div>
+                      )}
                       {(item.pendingUsd > 0 || item.pendingPhp > 0) && (
-                        <div className="flex flex-col items-end pt-2 mt-1 border-t border-black/10 dark:border-white/10 w-full">
-                          <div className="flex items-center gap-2 justify-end">
+                        <div className="flex flex-col items-end pt-1.5 mt-1 border-t border-black/10 dark:border-white/10 w-full">
+                          <div className="flex items-center gap-1.5 justify-end">
                             <Clock className="w-3 h-3 text-amber-500 shrink-0" />
                             <span className="text-[10px] font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400">To Do:</span>
                             <span className="text-xs font-bold text-amber-600 dark:text-amber-500 font-mono">
@@ -1063,14 +1063,6 @@ export const Dashboard: React.FC<DashboardProps> = ({ onQuickAdd, onViewTask }) 
                     >
                       <div className="flex justify-between items-start gap-2">
                         <span className="text-xs font-semibold text-gray-800 dark:text-gray-200 truncate">{task.title}</span>
-                        <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full shrink-0 ${task.priority === 'High'
-                            ? 'bg-rose-50 dark:bg-rose-950/30 text-rose-600 border border-rose-100 dark:border-rose-900/30'
-                            : task.priority === 'Medium'
-                              ? 'bg-amber-50 dark:bg-amber-950/30 text-amber-600 border border-amber-100 dark:border-amber-900/30'
-                              : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400'
-                          }`}>
-                          {task.priority}
-                        </span>
                       </div>
                       <div className="flex items-center justify-between text-[10px] text-gray-400 mt-2">
                         <span>{client?.name || 'Workspace'}</span>
