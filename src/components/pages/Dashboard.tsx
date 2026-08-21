@@ -152,18 +152,24 @@ export const Dashboard: React.FC<DashboardProps> = ({ onQuickAdd, onViewTask }) 
 
   // Selected period for freelancer leaderboard
   const [leaderboardPeriod, setLeaderboardPeriod] = useState('this-month');
+  const [customStartDate, setCustomStartDate] = useState<string>('');
+  const [customEndDate, setCustomEndDate] = useState<string>('');
 
   // Generate dynamic dropdown options for leaderboard
   const leaderboardPeriodOptions = useMemo(() => {
     const options = [
       { value: 'this-week', label: 'This Week' },
+      { value: 'last-week', label: 'Last Week' },
       { value: 'this-month', label: 'This Month' },
+      { value: 'last-month', label: 'Last Month' },
+      { value: 'this-year', label: 'This Year' },
       { value: 'all-time', label: 'All Time' },
+      { value: 'custom-range', label: 'Custom Range...' },
     ];
 
-    // Add past 5 months
+    // Add past 6 months
     const now = new Date();
-    for (let i = 1; i <= 5; i++) {
+    for (let i = 1; i <= 6; i++) {
       const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
       const year = d.getFullYear();
       const month = String(d.getMonth() + 1).padStart(2, '0');
@@ -188,9 +194,41 @@ export const Dashboard: React.FC<DashboardProps> = ({ onQuickAdd, onViewTask }) 
         const sundayStr = getLocalDateString(sunday);
         return taskList.filter(t => t.date >= sundayStr);
       }
+      if (period === 'last-week') {
+        const lastSunday = new Date(now);
+        lastSunday.setDate(now.getDate() - now.getDay() - 7);
+        const lastSaturday = new Date(now);
+        lastSaturday.setDate(now.getDate() - now.getDay() - 1);
+        const startStr = getLocalDateString(lastSunday);
+        const endStr = getLocalDateString(lastSaturday);
+        return taskList.filter(t => t.date >= startStr && t.date <= endStr);
+      }
       if (period === 'this-month') {
         const startOfMonthStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`;
         return taskList.filter(t => t.date >= startOfMonthStr);
+      }
+      if (period === 'last-month') {
+        const lastMonthDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+        const year = lastMonthDate.getFullYear();
+        const month = String(lastMonthDate.getMonth() + 1).padStart(2, '0');
+        const startStr = `${year}-${month}-01`;
+        const lastDay = new Date(now.getFullYear(), now.getMonth(), 0).getDate();
+        const endStr = `${year}-${month}-${String(lastDay).padStart(2, '0')}`;
+        return taskList.filter(t => t.date >= startStr && t.date <= endStr);
+      }
+      if (period === 'this-year') {
+        const startStr = `${now.getFullYear()}-01-01`;
+        return taskList.filter(t => t.date >= startStr);
+      }
+      if (period === 'custom-range') {
+        if (customStartDate && customEndDate) {
+          return taskList.filter(t => t.date >= customStartDate && t.date <= customEndDate);
+        } else if (customStartDate) {
+          return taskList.filter(t => t.date >= customStartDate);
+        } else if (customEndDate) {
+          return taskList.filter(t => t.date <= customEndDate);
+        }
+        return taskList;
       }
       // For YYYY-MM
       return taskList.filter(t => t.date.startsWith(period));
@@ -237,7 +275,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onQuickAdd, onViewTask }) 
     });
 
     return userList.sort((a, b) => b.totalUsd - a.totalUsd);
-  }, [users, currentUser, tasks, leaderboardPeriod, allTasks]);
+  }, [users, currentUser, tasks, leaderboardPeriod, allTasks, customStartDate, customEndDate]);
 
   // Statistics calculations
   const stats = useMemo(() => {
@@ -756,48 +794,18 @@ export const Dashboard: React.FC<DashboardProps> = ({ onQuickAdd, onViewTask }) 
                           </div>
                         </div>
 
-                        <div className="text-right shrink-0 flex items-center gap-2">
-                          <div className="flex flex-col items-end">
-                            <p className="text-sm font-bold text-gray-900 dark:text-white font-mono">
-                              ${task.usdRate.toFixed(2)}
+                        <div className="text-right shrink-0">
+                          <p className="text-sm font-bold text-gray-900 dark:text-white font-mono">
+                            ${task.usdRate.toFixed(2)}
+                          </p>
+                          {task.clientId === 'living-core' && task.imageCount !== undefined && task.imageCount > 0 && (
+                            <p className="text-[9px] text-emerald-500 font-bold leading-none mt-0.5">
+                              {task.imageCount} imgs @ ${task.ratePerImage || 1.5}
                             </p>
-                            {task.clientId === 'living-core' && task.imageCount !== undefined && task.imageCount > 0 && (
-                              <p className="text-[9px] text-emerald-500 font-bold leading-none mt-0.5">
-                                {task.imageCount} imgs @ ${task.ratePerImage || 1.5}
-                              </p>
-                            )}
-                            <p className="text-[10px] text-gray-400 font-mono mt-0.5">
-                              ₱{task.phpAmount.toLocaleString()}
-                            </p>
-                          </div>
-                          {task.status !== 'Completed' && (
-                            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                              {task.status !== 'In Progress' && (
-                                <button
-                                  id={`dash-inprogress-task-btn-${task.id}`}
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    updateTask(task.id, { status: 'In Progress' });
-                                  }}
-                                  className="p-1 hover:bg-blue-500/20 text-blue-600 dark:text-blue-400 rounded-lg transition-colors"
-                                  title="Mark as In Progress"
-                                >
-                                  <PlayCircle className="w-4 h-4" />
-                                </button>
-                              )}
-                              <button
-                                id={`dash-complete-task-btn-${task.id}`}
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  updateTask(task.id, { status: 'Completed' });
-                                }}
-                                className="p-1 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 rounded-lg transition-colors"
-                                title="Mark as Completed"
-                              >
-                                <CheckCircle2 className="w-4 h-4" />
-                              </button>
-                            </div>
                           )}
+                          <p className="text-[10px] text-gray-400 font-mono mt-0.5">
+                            ₱{task.phpAmount.toLocaleString()}
+                          </p>
                         </div>
                       </div>
                     );
@@ -940,23 +948,51 @@ export const Dashboard: React.FC<DashboardProps> = ({ onQuickAdd, onViewTask }) 
         {/* Right Side Column Widgets */}
         <div className="space-y-6">
           {/* Freelancer Earnings Leaderboard */}
-          <div className="glass-card rounded-2xl shadow-sm p-6 relative overflow-hidden">
-            <div className="flex items-center justify-between gap-2 mb-4">
-              <h3 className="font-bold text-gray-900 dark:text-white text-sm tracking-tight flex items-center gap-2">
-                <UserIcon className="w-4 h-4 text-purple-500" /> Leaderboard
-              </h3>
-              <select
-                id="leaderboard-period-select"
-                value={leaderboardPeriod}
-                onChange={(e) => setLeaderboardPeriod(e.target.value)}
-                className="px-2.5 py-1 text-xs font-bold font-mono text-gray-700 dark:text-gray-300 bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl cursor-pointer hover:bg-gray-50 dark:hover:bg-white/10 focus:outline-none focus:ring-1 focus:ring-purple-500 transition-all max-w-[130px] sm:max-w-none truncate"
-              >
-                {leaderboardPeriodOptions.map((opt) => (
-                  <option key={opt.value} value={opt.value} className="bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 font-sans font-medium">
-                    {opt.label}
-                  </option>
-                ))}
-              </select>
+          <div className="glass-card rounded-2xl shadow-sm p-6 relative overflow-hidden space-y-3">
+            <div className="flex flex-col gap-2">
+              <div className="flex items-center justify-between gap-2">
+                <h3 className="font-bold text-gray-900 dark:text-white text-sm tracking-tight flex items-center gap-2">
+                  <UserIcon className="w-4 h-4 text-purple-500" /> Leaderboard
+                </h3>
+                <select
+                  id="leaderboard-period-select"
+                  value={leaderboardPeriod}
+                  onChange={(e) => setLeaderboardPeriod(e.target.value)}
+                  className="px-2.5 py-1 text-xs font-bold font-mono text-gray-700 dark:text-gray-300 bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl cursor-pointer hover:bg-gray-50 dark:hover:bg-white/10 focus:outline-none focus:ring-1 focus:ring-purple-500 transition-all max-w-[150px] sm:max-w-none truncate"
+                >
+                  {leaderboardPeriodOptions.map((opt) => (
+                    <option key={opt.value} value={opt.value} className="bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 font-sans font-medium">
+                      {opt.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {leaderboardPeriod === 'custom-range' && (
+                <div className="flex items-center gap-2 bg-gray-50 dark:bg-white/5 p-2 rounded-xl border border-gray-200 dark:border-white/10 animate-fade-in text-xs mt-1">
+                  <div className="flex-1">
+                    <span className="text-[9px] font-bold text-gray-400 uppercase block mb-0.5 font-mono">From</span>
+                    <input
+                      id="leaderboard-custom-start"
+                      type="date"
+                      value={customStartDate}
+                      onChange={(e) => setCustomStartDate(e.target.value)}
+                      className="w-full bg-white dark:bg-black/30 border border-gray-200 dark:border-white/10 rounded-lg px-2 py-1 text-[11px] font-mono text-gray-900 dark:text-white focus:outline-none"
+                    />
+                  </div>
+                  <span className="text-gray-400 mt-3.5">-</span>
+                  <div className="flex-1">
+                    <span className="text-[9px] font-bold text-gray-400 uppercase block mb-0.5 font-mono">To</span>
+                    <input
+                      id="leaderboard-custom-end"
+                      type="date"
+                      value={customEndDate}
+                      onChange={(e) => setCustomEndDate(e.target.value)}
+                      className="w-full bg-white dark:bg-black/30 border border-gray-200 dark:border-white/10 rounded-lg px-2 py-1 text-[11px] font-mono text-gray-900 dark:text-white focus:outline-none"
+                    />
+                  </div>
+                </div>
+              )}
             </div>
             <div className="space-y-3.5">
               {comparisons.map((item, idx) => {
